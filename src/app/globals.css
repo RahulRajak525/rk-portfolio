@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Design system — order matters: tokens → base → utilities → effects. */
+@import "../styles/tokens.css";
+@import "../styles/base.css";
+@import "../styles/utilities.css";
+@import "../styles/effects.css";
+
+/* Landscape compositions (matches the 3D core's side-by-side layout rule). */
+@custom-variant aspect-wide {
+  @media (min-aspect-ratio: 23/20) {
+    @slot;
+  }
+}
+
+/* Variant for capable pointers (mouse/trackpad) — gate hover-only polish. */
+@custom-variant pointer-fine {
+  @media (hover: hover) and (pointer: fine) {
+    @slot;
+  }
+}

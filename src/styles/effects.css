@@ -1,0 +1,317 @@
+/* ==========================================================================
+   EFFECTS — keyframes, choreography and atmospheric layers.
+   Rule of thumb: animate only opacity / transform / filter; every effect has
+   a prefers-reduced-motion fallback; decoration is marked data-decorative.
+   ========================================================================== */
+
+@theme {
+  --animate-pulse-ring: pulse-ring 2.4s var(--ease-out-quart) infinite;
+  --animate-scroll-cue: scroll-cue 2.2s var(--ease-in-out-quart) infinite;
+  --animate-sheen: sheen 1.6s var(--ease-out-quart) both;
+  --animate-dash-flow: dash-flow 1.4s linear infinite;
+}
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+    filter: blur(6px);
+  }
+}
+
+@keyframes enter-rise {
+  from {
+    translate: 0 115%;
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes enter-draw {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    scale: 0.6;
+    opacity: 0.75;
+  }
+  70%,
+  100% {
+    scale: 2.8;
+    opacity: 0;
+  }
+}
+
+@keyframes scroll-cue {
+  0% {
+    translate: 0 -100%;
+  }
+  65%,
+  100% {
+    translate: 0 260%;
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+@keyframes sheen {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+
+@keyframes drift-ion {
+  to {
+    translate: -7vmax 5vmax;
+    scale: 1.08;
+  }
+}
+
+@keyframes drift-plasma {
+  to {
+    translate: 9vmax -5vmax;
+    scale: 0.94;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Load choreography (CSS-only, runs before hydration so it never waits on
+   JavaScript and never delays LCP). Usage:
+     <p data-enter style={{ "--enter-delay": "120ms" }} />
+   Variants: data-enter="rise" (inside .line-mask), "fade", "draw".
+   -------------------------------------------------------------------------- */
+[data-enter] {
+  animation: enter-up 1s var(--ease-out-expo) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+[data-enter="rise"] {
+  animation-name: enter-rise;
+  animation-duration: 1.15s;
+}
+
+[data-enter="fade"] {
+  animation-name: enter-fade;
+  animation-duration: 1.4s;
+}
+
+[data-enter="draw"] {
+  animation-name: enter-draw;
+  animation-duration: 1.4s;
+  transform-origin: left center;
+}
+
+/* Clips a display line so its glyphs can rise into place. The padding keeps
+   descenders visible despite the tight display line-height. */
+.line-mask {
+  display: block;
+  overflow: clip;
+  padding-block: 0.04em 0.16em;
+  margin-block: -0.04em -0.16em;
+}
+
+.line-mask > * {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enter] {
+    animation: none;
+  }
+}
+
+@layer components {
+  /* ------------------------------------------------------------------------
+     Atmosphere: fixed backdrop behind all content. CSS-only, GPU-cheap
+     (gradients, no filters, transform-only drift).
+     ------------------------------------------------------------------------ */
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-atmosphere);
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+  }
+
+  .atmosphere__aurora {
+    position: absolute;
+    border-radius: 9999px;
+    will-change: transform;
+  }
+
+  .atmosphere__aurora--ion {
+    top: -34vmax;
+    right: -22vmax;
+    width: 78vmax;
+    height: 78vmax;
+    background: radial-gradient(
+      closest-side,
+      oklch(0.81 0.14 206 / 0.13),
+      transparent 72%
+    );
+    animation: drift-ion 38s var(--ease-standard) infinite alternate;
+  }
+
+  .atmosphere__aurora--plasma {
+    bottom: -30vmax;
+    left: -28vmax;
+    width: 66vmax;
+    height: 66vmax;
+    background: radial-gradient(
+      closest-side,
+      oklch(0.6 0.22 295 / 0.12),
+      transparent 72%
+    );
+    animation: drift-plasma 46s var(--ease-standard) infinite alternate;
+  }
+
+  .atmosphere__noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .atmosphere__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      125% 95% at 50% 35%,
+      transparent 55%,
+      oklch(0.09 0.012 266 / 0.85) 100%
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .atmosphere__aurora {
+      animation: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Spotlight: pointer-following light on cards. One delegated listener
+     (<PointerSpotlight />) writes --spot-x/--spot-y; CSS does the rest.
+     ------------------------------------------------------------------------ */
+  [data-spotlight] {
+    position: relative;
+    isolation: isolate;
+    --spot-x: 50%;
+    --spot-y: 50%;
+  }
+
+  [data-spotlight]::before,
+  [data-spotlight]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out-quart);
+  }
+
+  /* Soft fill */
+  [data-spotlight]::before {
+    z-index: -1;
+    background: radial-gradient(
+      28rem circle at var(--spot-x) var(--spot-y),
+      oklch(0.81 0.14 206 / 0.08),
+      transparent 65%
+    );
+  }
+
+  /* Lit border */
+  [data-spotlight]::after {
+    padding: 1px;
+    background: radial-gradient(
+      18rem circle at var(--spot-x) var(--spot-y),
+      oklch(0.87 0.12 202 / 0.7),
+      transparent 70%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-spotlight]:hover::before,
+    [data-spotlight]:hover::after {
+      opacity: 1;
+    }
+  }
+
+  @media (forced-colors: active) {
+    [data-spotlight]::before,
+    [data-spotlight]::after {
+      display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Sheet dialog (mobile navigation): native <dialog> with discrete
+     open/close transitions. No JS animation, focus handled by the browser.
+     ------------------------------------------------------------------------ */
+  dialog[data-sheet] {
+    opacity: 0;
+    translate: 0 -0.75rem;
+    transition:
+      opacity var(--dur-base) var(--ease-out-quart),
+      translate var(--dur-base) var(--ease-out-quart),
+      overlay var(--dur-base) allow-discrete,
+      display var(--dur-base) allow-discrete;
+  }
+
+  dialog[data-sheet][open] {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    dialog[data-sheet][open] {
+      opacity: 0;
+      translate: 0 -0.75rem;
+    }
+  }
+
+  dialog[data-sheet]::backdrop {
+    background-color: oklch(0.09 0.012 266 / 0);
+    transition:
+      background-color var(--dur-base) var(--ease-out-quart),
+      overlay var(--dur-base) allow-discrete,
+      display var(--dur-base) allow-discrete;
+  }
+
+  dialog[data-sheet][open]::backdrop {
+    background-color: oklch(0.09 0.012 266 / 0.7);
+  }
+
+  @starting-style {
+    dialog[data-sheet][open]::backdrop {
+      background-color: oklch(0.09 0.012 266 / 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    dialog[data-sheet],
+    dialog[data-sheet][open] {
+      translate: none;
+    }
+  }
+}

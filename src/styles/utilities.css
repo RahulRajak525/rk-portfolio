@@ -1,0 +1,110 @@
+/* ==========================================================================
+   UTILITIES — small, composable styling primitives that Tailwind core does
+   not provide. Each one encodes a design decision, not a one-off.
+   ========================================================================== */
+
+/* Display face: Mona Sans on its expanded width axis. Pair with a
+   text-display-* size; the width axis is what makes it read "futuristic"
+   without resorting to a sci-fi novelty typeface. */
+@utility font-display {
+  font-family: var(--font-sans);
+  font-stretch: 125%;
+}
+
+/* Technical label: monospaced, uppercase, tracked. Used for indices,
+   eyebrows, metadata and HUD readouts. */
+@utility type-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 450;
+  text-transform: uppercase;
+}
+
+@utility type-micro {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: var(--text-micro--line-height);
+  letter-spacing: var(--text-micro--letter-spacing);
+  font-weight: 450;
+  text-transform: uppercase;
+}
+
+/* Accent gradient text. Reserved for one or two words per view. */
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-ion-200) 0%,
+    var(--color-ion-400) 32%,
+    var(--color-plasma-300) 72%,
+    var(--color-plasma-400) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  @media (forced-colors: active) {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* Frosted glass surface. Use selectively: over imagery/3D, never stacked. */
+@utility glass {
+  background-color: var(--color-surface);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Hairline grid background. Size/colour are overridable per instance:
+   e.g. class="bg-grid [--grid-size:48px]". */
+@utility bg-grid {
+  --grid-size: 64px;
+  --grid-color: var(--color-line);
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+/* HUD corner brackets drawn with gradients — zero extra DOM nodes.
+   Apply to an empty, absolutely positioned element (see <HudCorners />). */
+@utility hud-corners {
+  --hud-color: var(--color-line-accent);
+  --hud-len: 0.75rem;
+  --hud-weight: 1px;
+  background:
+    linear-gradient(var(--hud-color), var(--hud-color)) top left /
+      var(--hud-len) var(--hud-weight),
+    linear-gradient(var(--hud-color), var(--hud-color)) top left /
+      var(--hud-weight) var(--hud-len),
+    linear-gradient(var(--hud-color), var(--hud-color)) top right /
+      var(--hud-len) var(--hud-weight),
+    linear-gradient(var(--hud-color), var(--hud-color)) top right /
+      var(--hud-weight) var(--hud-len),
+    linear-gradient(var(--hud-color), var(--hud-color)) bottom left /
+      var(--hud-len) var(--hud-weight),
+    linear-gradient(var(--hud-color), var(--hud-color)) bottom left /
+      var(--hud-weight) var(--hud-len),
+    linear-gradient(var(--hud-color), var(--hud-color)) bottom right /
+      var(--hud-len) var(--hud-weight),
+    linear-gradient(var(--hud-color), var(--hud-color)) bottom right /
+      var(--hud-weight) var(--hud-len);
+  background-repeat: no-repeat;
+}
+
+/* Hides an element visually only while it is not focused (skip links). */
+@utility sr-only-focusable {
+  &:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}

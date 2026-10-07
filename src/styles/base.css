@@ -1,0 +1,96 @@
+/* ==========================================================================
+   BASE — element defaults, accessibility affordances, user preferences.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    accent-color: var(--color-accent);
+  }
+
+  html {
+    /* The page background lives on <html> so the fixed atmosphere layer
+       (negative z-index) can paint above it and below all content. */
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-padding-top: calc(var(--header-h) + 1.5rem);
+    scrollbar-color: var(--color-ink-700) transparent;
+    scrollbar-width: thin;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    min-height: 100dvh;
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    /* Decorative layers may bleed past the viewport edge; never scroll X. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: oklch(0.81 0.14 206 / 0.32);
+    color: var(--color-fg);
+  }
+
+  /* One focus treatment for the whole system: visible, high-contrast,
+     offset so it never overlaps the control's own border. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
+
+  /* Native modal dialogs lock page scroll while open. */
+  html:has(dialog[open]:modal) {
+    overflow: hidden;
+  }
+
+  /* Increased contrast: strengthen hairlines and secondary text. */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-line: oklch(0.92 0.02 266 / 0.28);
+      --color-line-strong: oklch(0.92 0.02 266 / 0.45);
+      --color-fg-muted: var(--color-ink-200);
+      --color-fg-subtle: var(--color-ink-300);
+      --color-fg-faint: var(--color-ink-400);
+      --color-surface: oklch(0.2 0.02 266 / 0.92);
+    }
+  }
+
+  /* Windows High Contrast / forced colors: drop decoration, keep structure. */
+  @media (forced-colors: active) {
+    [data-decorative] {
+      display: none !important;
+    }
+
+    :focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

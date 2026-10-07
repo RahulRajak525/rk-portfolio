@@ -1,0 +1,207 @@
+/* ==========================================================================
+   DESIGN TOKENS
+   Single source of truth for the visual language. Every value here becomes
+   a CSS custom property *and* a Tailwind utility (e.g. --color-fg -> text-fg).
+   Tailwind's default palette / type scale / radii are reset on purpose so
+   that only system values can be used.
+   Mirror of motion values for JS lives in src/lib/motion.ts.
+   ========================================================================== */
+
+@theme {
+  /* ---- Resets: only system tokens are allowed ------------------------- */
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --font-*: initial;
+
+  /* ---- Raw palette ---------------------------------------------------- */
+  --color-white: oklch(1 0 0);
+  --color-black: oklch(0 0 0);
+
+  /* Ink: cool neutral scale, from deep space to near-white text. */
+  --color-ink-1000: oklch(0.09 0.012 266);
+  --color-ink-950: oklch(0.12 0.014 266);
+  --color-ink-900: oklch(0.155 0.016 266);
+  --color-ink-850: oklch(0.19 0.018 266);
+  --color-ink-800: oklch(0.23 0.02 266);
+  --color-ink-700: oklch(0.3 0.022 266);
+  --color-ink-600: oklch(0.4 0.022 266);
+  --color-ink-500: oklch(0.52 0.02 266);
+  --color-ink-400: oklch(0.65 0.018 266);
+  --color-ink-300: oklch(0.77 0.014 266);
+  --color-ink-200: oklch(0.86 0.01 266);
+  --color-ink-100: oklch(0.93 0.006 266);
+  --color-ink-50: oklch(0.975 0.004 266);
+
+  /* Ion: primary accent. Electric cyan — light, focus, interactivity. */
+  --color-ion-100: oklch(0.96 0.04 200);
+  --color-ion-200: oklch(0.92 0.08 200);
+  --color-ion-300: oklch(0.87 0.12 202);
+  --color-ion-400: oklch(0.81 0.14 206);
+  --color-ion-500: oklch(0.71 0.14 212);
+  --color-ion-600: oklch(0.58 0.12 218);
+  --color-ion-700: oklch(0.45 0.1 222);
+  --color-ion-800: oklch(0.32 0.07 225);
+  --color-ion-900: oklch(0.22 0.05 228);
+
+  /* Plasma: secondary accent. Violet — depth, gradients, emphasis. */
+  --color-plasma-200: oklch(0.88 0.07 300);
+  --color-plasma-300: oklch(0.8 0.13 300);
+  --color-plasma-400: oklch(0.7 0.19 298);
+  --color-plasma-500: oklch(0.6 0.22 295);
+  --color-plasma-600: oklch(0.5 0.21 292);
+  --color-plasma-800: oklch(0.3 0.12 290);
+  --color-plasma-900: oklch(0.21 0.08 290);
+
+  /* Signal / Flare / Danger: status only — never decorative. */
+  --color-signal-400: oklch(0.86 0.18 152);
+  --color-signal-500: oklch(0.76 0.17 152);
+  --color-flare-400: oklch(0.84 0.14 75);
+  --color-danger-400: oklch(0.7 0.18 25);
+
+  /* ---- Semantic roles (components use these, not the raw palette) ----- */
+  --color-canvas: var(--color-ink-950);
+  --color-canvas-deep: var(--color-ink-1000);
+  --color-surface: oklch(0.2 0.02 266 / 0.55);
+  --color-surface-strong: oklch(0.23 0.022 266 / 0.82);
+  --color-surface-solid: var(--color-ink-900);
+  --color-line: oklch(0.92 0.02 266 / 0.09);
+  --color-line-strong: oklch(0.92 0.02 266 / 0.17);
+  --color-line-accent: oklch(0.81 0.14 206 / 0.45);
+
+  /* Text — measured WCAG contrast on canvas: fg 18.9:1, muted 9.8:1,
+     subtle 6.3:1 (all ≥ AA; ≥ 5.2:1 on the darkest glass surface). */
+  --color-fg: var(--color-ink-50);
+  --color-fg-muted: var(--color-ink-300);
+  --color-fg-subtle: var(--color-ink-400);
+  /* Faint (3.7:1): decorative/HUD only. Never for essential information. */
+  --color-fg-faint: var(--color-ink-500);
+
+  --color-accent: var(--color-ion-400);
+  --color-accent-strong: var(--color-ion-300);
+  --color-accent-2: var(--color-plasma-400);
+  --color-on-accent: var(--color-ink-1000);
+  --color-positive: var(--color-signal-400);
+  --color-warning: var(--color-flare-400);
+  --color-negative: var(--color-danger-400);
+  --color-focus: var(--color-ion-300);
+
+  /* ---- Typography: fluid scale ---------------------------------------- */
+  /* Display — Mona Sans Expanded. Hero & section titles only. */
+  --text-display-2xl: clamp(3rem, 1.15rem + 7.4vw, 8.75rem);
+  --text-display-2xl--line-height: 0.88;
+  --text-display-2xl--letter-spacing: -0.045em;
+  --text-display-2xl--font-weight: 620;
+
+  --text-display-xl: clamp(2.5rem, 1.35rem + 4.6vw, 5.75rem);
+  --text-display-xl--line-height: 0.92;
+  --text-display-xl--letter-spacing: -0.04em;
+  --text-display-xl--font-weight: 620;
+
+  --text-display-lg: clamp(2rem, 1.3rem + 2.8vw, 4rem);
+  --text-display-lg--line-height: 1;
+  --text-display-lg--letter-spacing: -0.032em;
+  --text-display-lg--font-weight: 600;
+
+  /* Headings — Mona Sans, normal width. */
+  --text-heading-lg: clamp(1.5rem, 1.2rem + 1.3vw, 2.25rem);
+  --text-heading-lg--line-height: 1.15;
+  --text-heading-lg--letter-spacing: -0.022em;
+  --text-heading-lg--font-weight: 600;
+
+  --text-heading-md: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-heading-md--line-height: 1.25;
+  --text-heading-md--letter-spacing: -0.015em;
+  --text-heading-md--font-weight: 600;
+
+  --text-heading-sm: 1.125rem;
+  --text-heading-sm--line-height: 1.35;
+  --text-heading-sm--letter-spacing: -0.01em;
+  --text-heading-sm--font-weight: 600;
+
+  /* Body. */
+  --text-body-lg: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --text-body-lg--line-height: 1.6;
+  --text-body: 1rem;
+  --text-body--line-height: 1.65;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.55;
+
+  /* Technical labels — Martian Mono, uppercase. 12px floor for anything a
+     reader must understand; `micro` is HUD decoration only. */
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.3;
+  --text-label--letter-spacing: 0.12em;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.3;
+  --text-micro--letter-spacing: 0.14em;
+
+  /* ---- Layout & spacing ---------------------------------------------- */
+  /* Base unit stays Tailwind's 4px (--spacing: 0.25rem). Named, fluid
+     spacing tokens below create utilities like px-gutter / py-section. */
+  --spacing-gutter: clamp(1rem, 0.4rem + 2.6vw, 2.5rem);
+  --spacing-grid: clamp(1rem, 0.6rem + 1.4vw, 1.75rem);
+  --spacing-section: clamp(6rem, 3.5rem + 9vw, 11rem);
+  --spacing-header: var(--header-h);
+
+  --container-narrow: 44rem;
+  --container-content: 80rem;
+  --container-wide: 92rem;
+
+  /* ---- Shape ---------------------------------------------------------- */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+
+  /* ---- Depth: elevation & light -------------------------------------- */
+  --shadow-panel:
+    inset 0 1px 0 0 oklch(1 0 0 / 0.05), 0 24px 60px -28px oklch(0 0 0 / 0.75);
+  --shadow-lift: 0 40px 90px -40px oklch(0 0 0 / 0.9);
+  --shadow-glow:
+    0 0 0 1px oklch(0.81 0.14 206 / 0.4),
+    0 10px 40px -10px oklch(0.81 0.14 206 / 0.55);
+  --shadow-glow-plasma:
+    0 0 0 1px oklch(0.7 0.19 298 / 0.4),
+    0 10px 40px -10px oklch(0.7 0.19 298 / 0.5);
+
+  /* ---- Motion -------------------------------------------------------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-standard: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Font families reference next/font variables set on <html>, so they must be
+   resolved at use-site (`inline`). */
+@theme inline {
+  --font-sans: var(--font-mona-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-martian-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    monospace;
+}
+
+/* Runtime tokens that are not Tailwind namespaces. */
+:root {
+  --header-h: 4rem;
+
+  --dur-instant: 100ms;
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 600ms;
+  --dur-cinematic: 1100ms;
+
+  --z-atmosphere: -10;
+  --z-content: 1;
+  --z-header: 50;
+  --z-overlay: 80;
+  --z-skip: 100;
+}
+
+@media (width >= 64rem) {
+  :root {
+    --header-h: 4.5rem;
+  }
+}
