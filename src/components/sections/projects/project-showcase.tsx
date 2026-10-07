@@ -20,6 +20,7 @@ import { ease, popVariants, stagger } from "@/lib/motion";
 import { scrollToElement } from "@/components/motion/smooth-scroll";
 import { Badge } from "@/components/ui/badge";
 import { HudCorners } from "@/components/ui/panel";
+import { InViewFlag } from "@/components/motion/in-view-flag";
 import { CaseVisual } from "./case-visual";
 
 /**
@@ -82,14 +83,14 @@ export function ProjectShowcase({
       <div className="space-y-20 lg:col-span-6 lg:space-y-0">{children}</div>
       {project ? (
         <div className="hidden lg:col-span-6 lg:block">
-          <div className="sticky top-[calc(var(--header-h)+2.5rem)]">
+          <InViewFlag className="sticky top-[calc(var(--header-h)+2.5rem)]">
             <Stage
               projects={projects}
               project={project}
               index={active}
               onJump={jump}
             />
-          </div>
+          </InViewFlag>
         </div>
       ) : null}
     </div>
@@ -181,7 +182,7 @@ function Stage({
               exit={{ opacity: 0, scale: 0.94, filter: "blur(10px)" }}
               transition={{ duration: 0.6, ease: ease.outExpo }}
             >
-              <CaseVisual kind={project.visual} flow="always" />
+              <CaseVisual kind={project.visual} flow="inview" />
             </m.div>
           </AnimatePresence>
         </div>

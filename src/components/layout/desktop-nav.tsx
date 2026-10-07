@@ -8,6 +8,9 @@ import { sectionHref, sectionIds, sections } from "@/content/sections";
 import { useActiveSection } from "@/hooks/use-active-section";
 import { spring } from "@/lib/motion";
 
+/** Contact has its own button beside the nav (SiteHeader). */
+const navSections = sections.filter((section) => section.id !== "contact");
+
 /**
  * Primary navigation (≥ lg). Two shared-element indicators glide between
  * items: a soft pill follows hover/focus, an accent rule marks the section
@@ -21,7 +24,7 @@ export function DesktopNav() {
   return (
     <nav aria-label="Primary" className="hidden lg:block">
       <ul className="flex items-center" onPointerLeave={() => setHovered(null)}>
-        {sections.map((section) => (
+        {navSections.map((section) => (
           <li key={section.id} className="relative">
             {hovered === section.id ? (
               <m.span
@@ -34,6 +37,7 @@ export function DesktopNav() {
             <Link
               href={sectionHref(section.id)}
               aria-current={active === section.id ? "true" : undefined}
+              data-cursor="hand"
               onPointerEnter={() => setHovered(section.id)}
               onFocus={() => setHovered(section.id)}
               onBlur={() => setHovered(null)}

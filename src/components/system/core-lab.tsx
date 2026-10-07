@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useInView, useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
+import { CanvasBoundary } from "@/components/three/canvas-boundary";
 import { CorePoster } from "@/components/three/core-poster";
 import { useWebGLCapability } from "@/components/three/use-webgl-capability";
 
@@ -27,12 +28,18 @@ export function CoreLab() {
         className="relative aspect-square overflow-hidden rounded-lg border border-line bg-canvas-deep/60 sm:aspect-video"
       >
         {capability === "webgl" ? (
-          <CoreCanvas
-            placement="center"
-            reducedMotion={reducedMotion}
-            active={inView}
-            explode={exploded ? 1 : 0}
-          />
+          <CanvasBoundary
+            fallback={
+              <CorePoster className="top-1/2 left-1/2 w-[80%] sm:w-[50%]" />
+            }
+          >
+            <CoreCanvas
+              placement="center"
+              reducedMotion={reducedMotion}
+              active={inView}
+              explode={exploded ? 1 : 0}
+            />
+          </CanvasBoundary>
         ) : (
           <CorePoster className="top-1/2 left-1/2 w-[80%] sm:w-[50%]" />
         )}

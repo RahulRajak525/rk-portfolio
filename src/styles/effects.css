@@ -8,7 +8,14 @@
   --animate-pulse-ring: pulse-ring 2.4s var(--ease-out-quart) infinite;
   --animate-scroll-cue: scroll-cue 2.2s var(--ease-in-out-quart) infinite;
   --animate-sheen: sheen 1.6s var(--ease-out-quart) both;
-  --animate-dash-flow: dash-flow 1.4s linear infinite;
+  --animate-mark-spin: mark-spin 14s linear infinite;
+}
+
+/* Brand mark: one slow, constant revolution — the core idling. */
+@keyframes mark-spin {
+  to {
+    rotate: 360deg;
+  }
 }
 
 @keyframes enter-up {
@@ -19,21 +26,9 @@
   }
 }
 
-@keyframes enter-rise {
-  from {
-    translate: 0 115%;
-  }
-}
-
 @keyframes enter-fade {
   from {
     opacity: 0;
-  }
-}
-
-@keyframes enter-draw {
-  from {
-    scale: 0 1;
   }
 }
 
@@ -74,6 +69,22 @@
   }
 }
 
+/* Falls into the tray (ease-in), then re-enters from above (ease-out). */
+@keyframes download-drop {
+  0% {
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);
+  }
+  40% {
+    translate: 0 9px;
+    opacity: 0;
+  }
+  41% {
+    translate: 0 -9px;
+    opacity: 0;
+    animation-timing-function: var(--ease-out-expo);
+  }
+}
+
 @keyframes drift-ion {
   to {
     translate: -7vmax 5vmax;
@@ -92,40 +103,17 @@
    Load choreography (CSS-only, runs before hydration so it never waits on
    JavaScript and never delays LCP). Usage:
      <p data-enter style={{ "--enter-delay": "120ms" }} />
-   Variants: data-enter="rise" (inside .line-mask), "fade", "draw".
+   Variants: data-enter="fade"; the hero headline uses "lift-stretch"
+   (interaction.css).
    -------------------------------------------------------------------------- */
 [data-enter] {
   animation: enter-up 1s var(--ease-out-expo) both;
   animation-delay: var(--enter-delay, 0ms);
 }
 
-[data-enter="rise"] {
-  animation-name: enter-rise;
-  animation-duration: 1.15s;
-}
-
 [data-enter="fade"] {
   animation-name: enter-fade;
   animation-duration: 1.4s;
-}
-
-[data-enter="draw"] {
-  animation-name: enter-draw;
-  animation-duration: 1.4s;
-  transform-origin: left center;
-}
-
-/* Clips a display line so its glyphs can rise into place. The padding keeps
-   descenders visible despite the tight display line-height. */
-.line-mask {
-  display: block;
-  overflow: clip;
-  padding-block: 0.04em 0.16em;
-  margin-block: -0.04em -0.16em;
-}
-
-.line-mask > * {
-  display: block;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -261,6 +249,22 @@
     [data-spotlight]::before,
     [data-spotlight]::after {
       display: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------------
+     Download affordance (<DownloadLink />): on hover or keyboard focus the
+     arrow drops into the tray and re-enters — the action, previewed once.
+     ------------------------------------------------------------------------ */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-download]:focus-visible [data-arrow] {
+      animation: download-drop 0.75s both;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      [data-download]:hover [data-arrow] {
+        animation: download-drop 0.75s both;
+      }
     }
   }
 

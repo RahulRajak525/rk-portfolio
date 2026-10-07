@@ -2,6 +2,7 @@ import Link from "next/link";
 import { person } from "@/content/site";
 import { sectionHref } from "@/content/sections";
 import { ButtonLink } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { BrandMark } from "./brand-mark";
 import { DesktopNav } from "./desktop-nav";
 import { HeaderShell } from "./header-shell";
@@ -12,10 +13,11 @@ export function SiteHeader() {
     <HeaderShell>
       <Link
         href="/"
-        className="group/brand -m-2 flex items-center gap-3 rounded-full p-2"
-        aria-label={`${person.name}, home`}
+        data-cursor="hand"
+        className="-m-2 flex items-center gap-3 rounded-full p-2"
       >
-        <BrandMark className="size-7 text-fg transition-transform duration-(--dur-slow) ease-out-expo group-hover/brand:rotate-60" />
+        <BrandMark spin className="size-11 text-fg" />
+        <span className="sr-only sm:hidden">{person.name}</span>
         <span className="hidden flex-col leading-none sm:flex">
           <span className="text-body-sm font-semibold tracking-tight text-fg">
             {person.name}
@@ -30,16 +32,14 @@ export function SiteHeader() {
 
       <div className="flex items-center gap-2">
         {person.resumeUrl ? (
-          <ButtonLink
+          <DownloadLink
             href={person.resumeUrl}
-            external
-            download
-            variant="ghost"
             size="sm"
+            data-cursor="hand"
             className="hidden sm:inline-flex"
           >
             Résumé
-          </ButtonLink>
+          </DownloadLink>
         ) : null}
         <ButtonLink
           href={sectionHref("contact")}

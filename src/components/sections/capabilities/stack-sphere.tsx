@@ -159,8 +159,12 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
     hoverNode: -1,
     hoverGroup: null as string | null,
     frame: 0,
+    /** The loop sleeps once this passes and nothing else is active. */
+    awakeUntil: 0,
     screen: new Float32Array(nodes.length * 3), // x, y, depth per node
   });
+  /** Wakes the render loop for `ms` (set by the loop effect). */
+  const wake = useRef<(ms?: number) => void>(() => {});
 
   // Props → refs (read by the loop) and → data attributes (read by CSS).
   useLayoutEffect(() => {
@@ -186,9 +190,12 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
       const el = hubEls.current[i];
       if (el) el.dataset.focus = String(focus === hub.group.id);
     });
+    wake.current(1600); // let a focus rotation settle
   }, [filter, focus, reducedMotion, onHoverGroup]);
 
-  // The render loop — only while on screen and the tab is visible.
+  // The render loop — runs only while something is happening (hover, drag,
+  // inertia, scroll, a focus rotation) and the sphere is on screen; an idle
+  // sphere schedules no frames and costs nothing.
   useEffect(() => {
     const root = svg.current;
     if (!root) return;
@@ -316,29 +323,48 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
       last = now;
       step(dt);
       draw();
-      raf = requestAnimationFrame(frame);
+      const s = sim.current;
+      const busy =
+        s.dragging ||
+        s.hovering ||
+        Math.abs(s.vyaw) > 0.02 ||
+        now < s.awakeUntil;
+      raf = busy ? requestAnimationFrame(frame) : 0;
     };
     const start = () => {
       if (raf || !visible || document.hidden) return;
       last = performance.now();
       raf = requestAnimationFrame(frame);
     };
+    const poke = (ms = 900) => {
+      sim.current.awakeUntil = Math.max(
+        sim.current.awakeUntil,
+        performance.now() + ms,
+      );
+      start();
+    };
+    wake.current = poke;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         visible = Boolean(entry?.isIntersecting);
-        start();
+        poke();
       },
       { rootMargin: "120px" },
     );
     observer.observe(root);
-    document.addEventListener("visibilitychange", start);
+    const onVisibility = () => poke();
+    document.addEventListener("visibilitychange", onVisibility);
+    // Scrolling turns the sphere: each scroll update keeps it awake briefly.
+    const offScroll = scrollYProgress.on("change", () => poke(300));
     draw(); // initial pose, even before the loop starts
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
-      document.removeEventListener("visibilitychange", start);
+      offScroll();
+      wake.current = () => {};
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [scrollYProgress]);
 
@@ -355,6 +381,7 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
 
   const onPointerMove = (event: PointerEvent<SVGSVGElement>) => {
     const s = sim.current;
+    wake.current();
     const local = toLocal(event);
     if (!local) return;
 
@@ -407,11 +434,13 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
     s.lastX = event.clientX;
     s.lastY = event.clientY;
     s.lastT = performance.now();
+    wake.current();
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const endDrag = (event: PointerEvent<SVGSVGElement>) => {
     sim.current.dragging = false;
+    wake.current(1200); // let inertia play out
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -420,6 +449,7 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
   const onPointerLeave = () => {
     const s = sim.current;
     s.hovering = false;
+    wake.current(1200); // let the tilt settle back
     if (s.hoverNode !== -1 || s.hoverGroup !== null) {
       s.hoverNode = -1;
       s.hoverGroup = null;
@@ -444,7 +474,7 @@ export function StackSphere({ filter, focus, onHoverGroup }: StackSphereProps) {
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
         onPointerLeave={onPointerLeave}
-        className="mx-auto h-auto w-full max-w-[22rem] touch-pan-y select-none lg:max-w-none"
+        className="mx-auto h-auto w-full max-w-88 touch-pan-y select-none lg:max-w-none"
       >
         <defs>
           <radialGradient id="sphere-volume" cx="40%" cy="35%" r="70%">

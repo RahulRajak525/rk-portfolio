@@ -4,10 +4,10 @@ import { getSection } from "@/content/sections";
 import { Section } from "@/components/ui/section";
 import { Panel } from "@/components/ui/panel";
 import { ButtonLink } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Eyebrow, Text } from "@/components/ui/typography";
 import {
-  DownloadIcon,
   GitHubIcon,
   LinkedInIcon,
   MailIcon,
@@ -24,6 +24,8 @@ type Channel = {
   label: string;
   value: string;
   href?: string;
+  /** Custom cursor state on hover (see Cursor). */
+  cursor?: "hand";
   icon: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
@@ -54,6 +56,7 @@ export function Contact() {
     {
       label: "Location",
       value: [person.location, person.workMode].filter(Boolean).join(" · "),
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(person.location)}`,
       icon: PinIcon,
     },
     ...person.socials.flatMap((social) => {
@@ -65,8 +68,11 @@ export function Contact() {
         ? [
             {
               label: social.label,
-              value: social.href.replace(/^https?:\/\/(www\.)?/, ""),
+              value: social.href
+                .replace(/^https?:\/\/(www\.)?/, "")
+                .replace(/\/$/, ""),
               href: social.href,
+              cursor: "hand" as const,
               icon,
             },
           ]
@@ -126,21 +132,16 @@ export function Contact() {
               </ButtonLink>
               <CopyButton value={person.email} label="Copy address" />
               {person.resumeUrl ? (
-                <ButtonLink
-                  href={person.resumeUrl}
-                  external
-                  variant="ghost"
-                  size="lg"
-                  download
-                >
-                  <DownloadIcon />
+                <DownloadLink href={person.resumeUrl} magnetic>
                   Résumé
-                </ButtonLink>
+                </DownloadLink>
               ) : null}
             </div>
           ) : null}
 
-          <ul className="mt-14 grid gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          {/* Two columns keep the four channels a uniform 2×2; an odd last
+              channel spans the row instead of leaving an empty cell. */}
+          <ul className="mt-14 grid gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-2">
             {channels.map((channel) => {
               const Icon = channel.icon;
               const body = (
@@ -149,25 +150,29 @@ export function Contact() {
                     <Icon className="size-4" />
                     {channel.label}
                   </span>
-                  <span className="mt-2 block text-body break-all text-fg">
+                  <span className="mt-2 block text-body wrap-anywhere text-fg">
                     {channel.value}
                   </span>
                 </>
               );
               return (
-                <li key={channel.label} className="bg-canvas/85">
+                <li
+                  key={channel.label}
+                  className="bg-canvas/85 sm:odd:last:col-span-2"
+                >
                   {channel.href ? (
                     <a
                       href={channel.href}
                       {...(channel.href.startsWith("http")
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
-                      className="block p-5 transition-colors hover:bg-white/3 md:p-6"
+                      data-cursor={channel.cursor}
+                      className="block h-full p-5 transition-colors hover:bg-white/3 md:p-6"
                     >
                       {body}
                     </a>
                   ) : (
-                    <div className="p-5 md:p-6">{body}</div>
+                    <div className="h-full p-5 md:p-6">{body}</div>
                   )}
                 </li>
               );

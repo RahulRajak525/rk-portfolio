@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useInView, useReducedMotion } from "motion/react";
+import { animate, useReducedMotion } from "motion/react";
 import { ease } from "@/lib/motion";
 
 /**
  * Counts every number inside a string up from zero when it scrolls into
  * view ("40 / 10" animates both figures). The server renders the final
- * value (SEO, no-JS); the zero state is only swapped in while the element
- * is still off-screen, so there is never a visible flash.
+ * value (SEO, no-JS). The zero state is swapped in only while the element is
+ * still below the fold, so there is never a visible flash; the observer's
+ * first callback supplies that geometry without forcing a layout.
  */
 export function CountUp({
   value,
@@ -20,33 +21,49 @@ export function CountUp({
   duration?: number;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const primed = useRef(false);
-  const inView = useInView(ref, { once: true, amount: 0.8 });
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || reducedMotion || primed.current || !/\d/.test(value)) return;
-    if (el.getBoundingClientRect().top > window.innerHeight) {
-      el.textContent = value.replace(/\d+/g, "0");
-      primed.current = true;
-    }
-  }, [reducedMotion, value]);
+    if (!el || reducedMotion || !/\d/.test(value)) return;
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !inView || !primed.current) return;
-    const controls = animate(0, 1, {
-      duration,
-      ease: ease.outExpo,
-      onUpdate: (p) => {
-        el.textContent = value.replace(/\d+/g, (n) =>
-          String(Math.round(Number(n) * p)),
-        );
+    let primed = false;
+    let controls: ReturnType<typeof animate> | undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[entries.length - 1];
+        if (!entry) return;
+        if (entry.intersectionRatio >= 0.8) {
+          observer.disconnect();
+          if (!primed) return; // already on screen at load: keep the final value
+          controls = animate(0, 1, {
+            duration,
+            ease: ease.outExpo,
+            onUpdate: (p) => {
+              el.textContent = value.replace(/\d+/g, (n) =>
+                String(Math.round(Number(n) * p)),
+              );
+            },
+          });
+        } else if (
+          !primed &&
+          !entry.isIntersecting &&
+          entry.boundingClientRect.top > 0
+        ) {
+          el.textContent = value.replace(/\d+/g, "0");
+          primed = true;
+        }
       },
-    });
-    return () => controls.stop();
-  }, [inView, value, duration]);
+      { threshold: [0, 0.8] },
+    );
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      controls?.stop();
+      el.textContent = value;
+    };
+  }, [reducedMotion, value, duration]);
 
   return (
     <span ref={ref} className={className}>

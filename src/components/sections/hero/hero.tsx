@@ -3,10 +3,10 @@ import { heroFacts, person } from "@/content/site";
 import { sectionHref } from "@/content/sections";
 import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Eyebrow, Text } from "@/components/ui/typography";
-import { ArrowRightIcon, DownloadIcon } from "@/components/ui/icons";
-import { ScrambleText } from "@/components/motion/scramble-text";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import { HeroCopy, HeroScene } from "./hero-scene";
 import { HeroVisual } from "./hero-visual";
 
@@ -58,9 +58,7 @@ export function Hero() {
               style={delay(0)}
               className="flex flex-wrap items-center gap-x-5 gap-y-3"
             >
-              <Eyebrow index="00">
-                <ScrambleText text={`Portfolio · ${person.location}`} />
-              </Eyebrow>
+              <Eyebrow index="00">Portfolio · {person.location}</Eyebrow>
               {person.availability ? (
                 <Badge tone="positive">
                   <StatusDot pulse />
@@ -80,9 +78,9 @@ export function Hero() {
               <span className="sr-only"> — </span>
               <span className="mt-3 block font-display text-display-2xl">
                 {roleLines.map((line, i) => (
-                  <span key={line} className="line-mask">
+                  <span key={line} className="block">
                     <span
-                      data-enter="rise-stretch"
+                      data-enter="lift-stretch"
                       style={delay(140 + i * 90)}
                       className={
                         i === roleLines.length - 1 ? "text-gradient" : undefined
@@ -138,16 +136,9 @@ export function Hero() {
                 Get in touch
               </ButtonLink>
               {person.resumeUrl ? (
-                <ButtonLink
-                  href={person.resumeUrl}
-                  external
-                  variant="ghost"
-                  size="lg"
-                  download
-                >
+                <DownloadLink href={person.resumeUrl} magnetic>
                   Résumé
-                  <DownloadIcon />
-                </ButtonLink>
+                </DownloadLink>
               ) : null}
             </div>
           </div>

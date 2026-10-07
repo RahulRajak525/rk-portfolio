@@ -80,8 +80,20 @@ html.cursor-custom * {
     box-shadow: 0 0 30px -4px oklch(0.81 0.14 206 / 0.6);
   }
 
+  /* See-through disc: the content under the pointer stays visible. */
+  .cursor-ring[data-variant="hand"] {
+    border-color: oklch(0.81 0.14 206 / 0.6);
+    background-color: oklch(0.81 0.14 206 / 0.1);
+  }
+
   .cursor-ring[data-pressed="true"] {
     scale: 0.86;
+  }
+
+  /* Label and hand share the ring's single grid cell, centred. */
+  .cursor-label,
+  .cursor-hand {
+    grid-area: 1 / 1;
   }
 
   .cursor-label {
@@ -97,6 +109,26 @@ html.cursor-custom * {
 
   .cursor-ring[data-variant="label"] .cursor-label {
     opacity: 1;
+  }
+
+  /* The hand pops in tilted and settles, like a finger landing on a key. */
+  .cursor-hand {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-accent);
+    opacity: 0;
+    scale: 0.4;
+    rotate: -20deg;
+    transition:
+      opacity var(--dur-fast),
+      scale var(--dur-base) var(--ease-out-expo),
+      rotate var(--dur-base) var(--ease-out-expo);
+  }
+
+  .cursor-ring[data-variant="hand"] .cursor-hand {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
   }
 
   .cursor-dot {
@@ -121,6 +153,7 @@ html.cursor-custom * {
 
   .cursor-dot[data-variant="morph"],
   .cursor-dot[data-variant="label"],
+  .cursor-dot[data-variant="hand"],
   .cursor-dot[data-variant="link"] {
     scale: 0;
   }
@@ -132,23 +165,33 @@ html.cursor-custom * {
   }
 }
 
-/* ---- Hero headline: the display face expands into its wide cut --------- */
+/* ---- Hero headline: the display face expands into its wide cut --------
+   Opacity + a short lift (no clipping mask): the headline is visible from
+   the first animated frame, so it registers as the LCP element at once. */
+@keyframes enter-lift {
+  from {
+    opacity: 0;
+    translate: 0 0.3em;
+  }
+}
+
 @keyframes enter-stretch {
   from {
     font-stretch: 100%;
   }
 }
 
-[data-enter="rise-stretch"] {
+[data-enter="lift-stretch"] {
+  display: inline-block;
   animation:
-    enter-rise 1.15s var(--ease-out-expo) both,
-    enter-stretch 1.7s var(--ease-in-out-quart) both;
+    enter-lift 1s var(--ease-out-expo) both,
+    enter-stretch 1.6s var(--ease-in-out-quart) both;
   animation-delay:
-    var(--enter-delay, 0ms), calc(var(--enter-delay, 0ms) + 220ms);
+    var(--enter-delay, 0ms), calc(var(--enter-delay, 0ms) + 120ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-enter="rise-stretch"] {
+  [data-enter="lift-stretch"] {
     animation: none;
   }
 }

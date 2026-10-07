@@ -39,7 +39,9 @@ export function useHeroProgress(): MotionValue<number> {
 }
 
 /**
- * Copy layer: lifts and fades as the hero scrolls away. It never follows
+ * Copy layer: lifts and fades as the hero scrolls away — but holds full
+ * brightness for the first stretch, so a small scroll never dims the
+ * headline mid-read. It never follows
  * the pointer — text stays perfectly still while reading; the 3D core alone
  * carries the cursor interaction. Neutralised under reduced motion by CSS.
  */
@@ -52,7 +54,7 @@ export function HeroCopy({
 }) {
   const progress = useHeroProgress();
   const y = useTransform(progress, [0, 1], [0, -150]);
-  const opacity = useTransform(progress, [0, 0.3], [1, 0]);
+  const opacity = useTransform(progress, [0.1, 0.4], [1, 0]);
 
   return (
     <m.div data-scroll-linked="" style={{ y, opacity }} className={className}>

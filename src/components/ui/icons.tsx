@@ -33,6 +33,14 @@ export function ArrowRightIcon(props: IconProps) {
   );
 }
 
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <Stroke {...props}>
+      <path d="M12 19.5v-15M6 10.5l6-6 6 6" />
+    </Stroke>
+  );
+}
+
 export function ArrowUpRightIcon(props: IconProps) {
   return (
     <Stroke {...props}>
@@ -41,18 +49,37 @@ export function ArrowUpRightIcon(props: IconProps) {
   );
 }
 
-export function ArrowDownIcon(props: IconProps) {
+/**
+ * Pointing hand, solid (currentColor fill). Silhouette adapted from Lucide's
+ * `pointer` (ISC licence); knuckle creases are cut back to the page colour.
+ */
+export function HandPointerIcon(props: IconProps) {
   return (
-    <Stroke {...props}>
-      <path d="M12 4.5v15M6 13.5l6 6 6-6" />
-    </Stroke>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      focusable="false"
+      {...props}
+    >
+      <path d="M6 14V4a2 2 0 0 1 4 0v5a2 2 0 0 1 4 0v1a2 2 0 0 1 4 0v1a2 2 0 0 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82Z" />
+      <path
+        d="M10 9v2.5M14 10v2.5M18 11v2.5"
+        fill="none"
+        className="stroke-canvas"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
 export function DownloadIcon(props: IconProps) {
   return (
     <Stroke {...props}>
-      <path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" />
+      {/* Arrow and tray are separate so the arrow can drop alone. */}
+      <path data-arrow="" d="M12 4v11M7 10.5l5 5 5-5" />
+      <path d="M5 19.5h14" />
     </Stroke>
   );
 }

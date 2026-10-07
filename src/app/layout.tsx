@@ -4,6 +4,7 @@ import { person, seo, status } from "@/content/site";
 import { getSiteUrl } from "@/lib/site-url";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { Atmosphere } from "@/components/layout/atmosphere";
+import { BackToTop } from "@/components/layout/back-to-top";
 import { PointerSpotlight } from "@/components/layout/pointer-spotlight";
 import { SectionObserver } from "@/components/layout/section-observer";
 import { SmoothScroll } from "@/components/motion/smooth-scroll";
@@ -89,6 +90,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <SiteFooter />
+          <BackToTop />
           <Cursor />
         </MotionProvider>
         <PointerSpotlight />

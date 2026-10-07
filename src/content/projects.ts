@@ -63,7 +63,10 @@ export const projects: readonly CaseStudy[] = [
     ],
     links: [
       { label: "Live demo", href: "https://kora-ecommerce.onrender.com/" },
-      // TODO: add { label: "Source code", href: "https://github.com/…" }
+      {
+        label: "Source code",
+        href: "https://github.com/RahulRajak525/fullstack-ecommerce",
+      },
     ],
     visual: "commerce",
   },

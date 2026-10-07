@@ -95,20 +95,23 @@ export function ProjectChapter({
             </ul>
           </dd>
         </div>
-        <div className={cn("grid gap-6", project.outcome && "sm:grid-cols-2")}>
-          <div>
-            <dt className="type-label text-fg-faint">Challenge</dt>
-            <dd className="mt-1.5 text-body-sm text-fg-muted">
-              {project.challenge}
-            </dd>
-          </div>
-          {project.outcome ? (
-            <div>
-              <dt className="type-label text-fg-faint">Outcome</dt>
-              <dd className="mt-1.5 text-body-sm text-fg">{project.outcome}</dd>
-            </div>
-          ) : null}
+      </dl>
+      {/* A second list (not a wrapper div) keeps <dl> children valid. */}
+      <dl
+        className={cn("mt-6 grid gap-6", project.outcome && "sm:grid-cols-2")}
+      >
+        <div>
+          <dt className="type-label text-fg-faint">Challenge</dt>
+          <dd className="mt-1.5 text-body-sm text-fg-muted">
+            {project.challenge}
+          </dd>
         </div>
+        {project.outcome ? (
+          <div>
+            <dt className="type-label text-fg-faint">Outcome</dt>
+            <dd className="mt-1.5 text-body-sm text-fg">{project.outcome}</dd>
+          </div>
+        ) : null}
       </dl>
 
       <RevealGroup as="ul" className="mt-8 flex flex-wrap gap-2">

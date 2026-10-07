@@ -37,10 +37,10 @@ export async function SiteFooter() {
           <div className="md:col-span-6 lg:col-span-5">
             <Link
               href="/"
+              data-cursor="hand"
               className="inline-flex items-center gap-3"
-              aria-label={`${person.name}, home`}
             >
-              <BrandMark className="size-8 text-fg" />
+              <BrandMark className="size-12 text-fg" />
               <span className="flex flex-col leading-none">
                 <span className="text-body font-semibold tracking-tight text-fg">
                   {person.name}
@@ -62,6 +62,7 @@ export async function SiteFooter() {
                 <li key={section.id}>
                   <Link
                     href={sectionHref(section.id)}
+                    data-cursor="hand"
                     className="group/link inline-flex items-baseline gap-3 text-body-sm text-fg-muted transition-colors hover:text-fg"
                   >
                     <span className="type-label text-fg-faint tabular-nums group-hover/link:text-accent">
@@ -82,6 +83,7 @@ export async function SiteFooter() {
                   <li>
                     <a
                       href={`mailto:${person.email}`}
+                      data-cursor="hand"
                       className="inline-flex items-center gap-2.5 text-body-sm text-fg-muted transition-colors hover:text-fg"
                     >
                       <MailIcon className="size-4" />
@@ -97,6 +99,7 @@ export async function SiteFooter() {
                         href={social.href}
                         target="_blank"
                         rel="noopener noreferrer"
+                        data-cursor="hand"
                         className="inline-flex items-center gap-2.5 text-body-sm text-fg-muted transition-colors hover:text-fg"
                       >
                         {Icon ? <Icon className="size-4" /> : null}
@@ -117,14 +120,13 @@ export async function SiteFooter() {
             © {year} {person.name}
           </p>
           <p>Next.js · React Three Fiber · Motion · Tailwind CSS</p>
-          <div className="flex gap-6">
-            <Link href="/system" className="transition-colors hover:text-fg">
-              Design system
-            </Link>
-            <a href="#main" className="transition-colors hover:text-fg">
-              Back to top ↑
-            </a>
-          </div>
+          <Link
+            href="/system"
+            data-cursor="hand"
+            className="transition-colors hover:text-fg"
+          >
+            Design system
+          </Link>
         </div>
       </Container>
     </footer>

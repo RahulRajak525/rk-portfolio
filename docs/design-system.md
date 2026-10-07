@@ -12,18 +12,18 @@ A premium technology laboratory: deep-space canvas, one luminous accent, instrum
 
 All colours are OKLCH. Tailwind's default palette is removed, so only system colours can be used.
 
-| Role       | Token                                                | Use                                     |
-| ---------- | ---------------------------------------------------- | --------------------------------------- |
-| Canvas     | `canvas`, `canvas-deep`                              | Page background                         |
-| Surfaces   | `surface` (glass), `surface-strong`, `surface-solid` | Panels                                  |
-| Lines      | `line`, `line-strong`, `line-accent`                 | Hairlines, dividers, HUD                |
-| Text       | `fg` 18.9:1 · `fg-muted` 9.8:1 · `fg-subtle` 6.3:1   | Headings · body · secondary             |
-| Decoration | `fg-faint` 3.7:1                                     | HUD ornament only, never essential text |
-| Accent     | `accent` (ion), `accent-strong`                      | Action, focus, the single highlight     |
-| Accent 2   | `accent-2` (plasma)                                  | Depth, gradients, secondary emphasis    |
-| Status     | `positive`, `warning`, `negative`                    | Meaning only                            |
+| Role     | Token                                                | Use                                  |
+| -------- | ---------------------------------------------------- | ------------------------------------ |
+| Canvas   | `canvas`, `canvas-deep`                              | Page background                      |
+| Surfaces | `surface` (glass), `surface-strong`, `surface-solid` | Panels                               |
+| Lines    | `line`, `line-strong`, `line-accent`                 | Hairlines, dividers, HUD             |
+| Text     | `fg` 18.9:1 · `fg-muted` 9.8:1 · `fg-subtle` 6.3:1   | Headings · body · secondary          |
+| Tertiary | `fg-faint` 5.1:1                                     | Labels, indices, HUD metadata        |
+| Accent   | `accent` (ion), `accent-strong`                      | Action, focus, the single highlight  |
+| Accent 2 | `accent-2` (plasma)                                  | Depth, gradients, secondary emphasis |
+| Status   | `positive`, `warning`, `negative`                    | Meaning only                         |
 
-Rules: one primary action per view. Gradient text (`text-gradient`) on at most one phrase per view. Contrast ratios above were measured against `canvas`; every text token passes WCAG AA.
+Rules: one primary action per view. Gradient text (`text-gradient`) on at most one phrase per view. Contrast ratios above were measured against `canvas`; every text token passes WCAG AA (verified with axe-core).
 
 ## Typography
 
@@ -45,6 +45,7 @@ Rules: one primary action per view. Gradient text (`text-gradient`) on at most o
 | Component                    | Notes                                                                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Button`, `ButtonLink`       | `primary` / `secondary` / `ghost`; `sm` / `md` / `lg` / `icon`. Internal links are type-checked (typed routes); `external` adds safe `rel`. |
+| `DownloadLink`               | File download (the résumé). Ion icon well + file-type tag; `sm` (borderless) / `lg`. Ranks below `secondary`.                               |
 | `Panel`                      | `glass` / `solid` / `outline` / `blueprint`; `spotlight` (pointer light), `corners` (HUD brackets).                                         |
 | `Badge`, `StatusDot`         | Tags and live-state indicators. A dot is always paired with text.                                                                           |
 | `Heading`, `Text`, `Eyebrow` | Typography primitives.                                                                                                                      |
@@ -65,7 +66,7 @@ Rules: one primary action per view. Gradient text (`text-gradient`) on at most o
 - **Load choreography:** CSS-only (`data-enter`). It starts on first paint, never waits for JavaScript, and never blocks LCP.
 - **Scroll reveals:** `<Reveal>`, `<RevealGroup>` and `<RevealItem>` (Motion `whileInView`, once). They use a ≤ 24px rise that resolves from a soft blur, with a 70ms stagger. Content is server-rendered; a `<noscript>` rule un-hides it without JavaScript.
 - **Scroll-linked:** header glass state and progress line; the hero core recedes on exit.
-- **Micro-interactions:** primary-button light sweep, arrow nudge, pointer spotlight, nav underline.
+- **Micro-interactions:** primary-button light sweep, arrow nudge, download-arrow drop, pointer spotlight, nav underline.
 - **Reduced motion:** `MotionConfig reducedMotion="user"`, CSS media queries, and a static 3D frame. Travel and loops are removed; meaning is kept.
 - **Budget:** animate transform, opacity and filter only. No scroll hijacking, and no smooth-scroll library.
 - **GSAP:** intentionally not installed. Reserved for a pinned, timeline-driven sequence (for example the core's anatomy walkthrough) if one is needed later.

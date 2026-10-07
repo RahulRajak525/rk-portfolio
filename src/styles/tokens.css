@@ -27,6 +27,7 @@
   --color-ink-700: oklch(0.3 0.022 266);
   --color-ink-600: oklch(0.4 0.022 266);
   --color-ink-500: oklch(0.52 0.02 266);
+  --color-ink-450: oklch(0.6 0.019 266);
   --color-ink-400: oklch(0.65 0.018 266);
   --color-ink-300: oklch(0.77 0.014 266);
   --color-ink-200: oklch(0.86 0.01 266);
@@ -74,8 +75,8 @@
   --color-fg: var(--color-ink-50);
   --color-fg-muted: var(--color-ink-300);
   --color-fg-subtle: var(--color-ink-400);
-  /* Faint (3.7:1): decorative/HUD only. Never for essential information. */
-  --color-fg-faint: var(--color-ink-500);
+  /* Faint (5.1:1, AA): tertiary labels and HUD metadata. */
+  --color-fg-faint: var(--color-ink-450);
 
   --color-accent: var(--color-ion-400);
   --color-accent-strong: var(--color-ion-300);

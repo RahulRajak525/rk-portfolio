@@ -26,7 +26,7 @@ const twMerge = extendTailwindMerge({
       container: ["narrow", "content", "wide"],
       shadow: ["panel", "lift", "glow", "glow-plasma"],
       ease: ["out-expo", "out-quart", "in-out-quart", "standard"],
-      animate: ["pulse-ring", "scroll-cue", "sheen", "dash-flow"],
+      animate: ["pulse-ring", "scroll-cue", "sheen"],
       font: ["display"],
     },
   },

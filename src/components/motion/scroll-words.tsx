@@ -6,8 +6,9 @@ import * as m from "motion/react-m";
 
 /**
  * Reading-paced text: each word brightens as the paragraph scrolls through
- * the viewport, so the eye is led line by line. Always legible (dimmed
- * words stay at 30% opacity); fully lit under reduced motion via CSS.
+ * the viewport, so the eye is led line by line. Always legible: dimmed
+ * words stay at 52% opacity (≈4.8:1, WCAG AA); fully lit under reduced
+ * motion via CSS.
  */
 export function ScrollWords({
   text,
@@ -50,7 +51,7 @@ function Word({
   range: [number, number];
   children: string;
 }) {
-  const opacity = useTransform(progress, range, [0.3, 1]);
+  const opacity = useTransform(progress, range, [0.52, 1]);
   return (
     <>
       <m.span data-reveal="" data-scroll-linked="" style={{ opacity }}>

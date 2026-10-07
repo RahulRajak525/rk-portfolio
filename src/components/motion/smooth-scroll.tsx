@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Lenis from "lenis";
+import type Lenis from "lenis";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 /**
@@ -9,11 +9,33 @@ import { useMediaQuery } from "@/hooks/use-media-query";
  *
  * Lenis drives the *native* scroll position (no transformed wrapper), so
  * sticky positioning, scroll-linked animation, find-in-page and the
- * scrollbar keep working. Touch devices keep native momentum scrolling;
- * reduced-motion users keep native scrolling entirely.
+ * scrollbar keep working. Touch devices keep native momentum scrolling and
+ * never download Lenis; reduced-motion users keep native scrolling.
+ *
+ * The frame loop runs only while a smooth scroll is in flight — an idle
+ * page schedules no animation frames at all.
  */
 
 let lenis: Lenis | null = null;
+let frame = 0;
+
+function loop(time: number) {
+  if (!lenis) {
+    frame = 0;
+    return;
+  }
+  lenis.raf(time);
+  frame = lenis.isScrolling ? requestAnimationFrame(loop) : 0;
+}
+
+/** Start the loop if it is not already running. */
+function wake() {
+  if (!lenis || frame) return;
+  // Zero the clock so the first frame after an idle gap has no time delta
+  // (otherwise the stale delta would jump straight to the target).
+  lenis.time = 0;
+  frame = requestAnimationFrame(loop);
+}
 
 const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
@@ -31,6 +53,7 @@ export function scrollToElement(target: HTMLElement) {
       easing: easeOutExpo,
       onComplete: () => focusTarget(target),
     });
+    wake();
   } else {
     target.scrollIntoView({ block: "start" });
     focusTarget(target);
@@ -44,20 +67,13 @@ export function SmoothScroll() {
 
   useEffect(() => {
     if (!enabled) return;
-
-    lenis = new Lenis({
-      autoRaf: true,
-      lerp: 0.11,
-      // Pauses itself while the page is scroll-locked (e.g. modal dialog).
-      autoToggle: true,
-      // Lets nested scrollers (menus, code blocks) scroll natively.
-      allowNestedScroll: true,
-    });
+    let cancelled = false;
 
     // Same-page fragment links: cancel the instant jump (and Next's router
     // scroll) in the capture phase, then glide there and update the hash.
     const onClick = (event: MouseEvent) => {
       if (
+        !lenis ||
         event.defaultPrevented ||
         event.button !== 0 ||
         event.metaKey ||
@@ -90,9 +106,25 @@ export function SmoothScroll() {
       scrollToElement(target);
     };
 
-    document.addEventListener("click", onClick, { capture: true });
+    import("lenis").then(({ default: LenisClass }) => {
+      if (cancelled) return;
+      lenis = new LenisClass({
+        lerp: 0.11,
+        // Pauses itself while the page is scroll-locked (e.g. modal dialog).
+        autoToggle: true,
+        // Lets nested scrollers (menus, code blocks) scroll natively.
+        allowNestedScroll: true,
+      });
+      window.addEventListener("wheel", wake, { passive: true });
+      document.addEventListener("click", onClick, { capture: true });
+    });
+
     return () => {
+      cancelled = true;
+      window.removeEventListener("wheel", wake);
       document.removeEventListener("click", onClick, { capture: true });
+      cancelAnimationFrame(frame);
+      frame = 0;
       lenis?.destroy();
       lenis = null;
     };

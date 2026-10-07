@@ -5,6 +5,7 @@ import { useMotionValue, useSpring } from "motion/react";
 import * as m from "motion/react-m";
 import { pointer, trackPointer } from "@/lib/pointer";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { HandPointerIcon } from "@/components/ui/icons";
 
 /**
  * Custom cursor — fine pointers only. Off for touch, reduced motion and
@@ -18,6 +19,8 @@ import { useMediaQuery } from "@/hooks/use-media-query";
  *            pointer (CSS reads --magnet-x/y; no React involved)
  * - label    ring becomes a filled disc with a verb: data-cursor="label"
  *            data-cursor-label="Drag"
+ * - hand     ring becomes a small filled disc with a pointing hand:
+ *            data-cursor="hand"
  * Movement never re-renders React: positions are motion values.
  */
 
@@ -25,11 +28,12 @@ const ENABLED =
   "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) and (forced-colors: none)";
 const INTERACTIVE =
   "a[href], button, [role='button'], [data-cursor], label[for], summary";
-const SIZE = { default: 34, link: 56, label: 88 } as const;
+const SIZE = { default: 34, hand: 44, link: 56, label: 88 } as const;
 const MAGNET = 0.22;
 const MAGNET_MAX = 10;
 
-type Variant = "hidden" | "default" | "minimal" | "link" | "morph" | "label";
+type Variant =
+  "hidden" | "default" | "minimal" | "link" | "morph" | "label" | "hand";
 
 const clamp = (value: number, max: number) =>
   Math.max(-max, Math.min(max, value));
@@ -76,11 +80,9 @@ function CursorLayer() {
       setLabel(nextLabel);
       if (next !== "morph") {
         const size =
-          next === "label"
-            ? SIZE.label
-            : next === "link"
-              ? SIZE.link
-              : SIZE.default;
+          next === "label" || next === "link" || next === "hand"
+            ? SIZE[next]
+            : SIZE.default;
         w.set(size);
         h.set(size);
         r.set(size / 2);
@@ -142,6 +144,8 @@ function CursorLayer() {
         );
       } else if (el.dataset.cursor === "label") {
         set("label", el.dataset.cursorLabel ?? "");
+      } else if (el.dataset.cursor === "hand") {
+        set("hand");
       } else if (el.hasAttribute("data-magnetic")) {
         if (magnet.current?.el !== el) {
           magnet.current = {
@@ -199,6 +203,7 @@ function CursorLayer() {
         style={{ x, y, width, height, borderRadius: radius }}
       >
         <span className="cursor-label">{label}</span>
+        <HandPointerIcon className="cursor-hand" />
       </m.div>
       <m.div
         data-variant={variant}

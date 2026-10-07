@@ -13,6 +13,7 @@ import * as m from "motion/react-m";
 import type { RootState } from "@react-three/fiber";
 import { cn } from "@/lib/cn";
 import { createStore, type Store } from "@/lib/store";
+import { CanvasBoundary } from "@/components/three/canvas-boundary";
 import { CorePoster } from "@/components/three/core-poster";
 import { useWebGLCapability } from "@/components/three/use-webgl-capability";
 import type { CoreTelemetry } from "@/components/three/core-canvas";
@@ -24,14 +25,27 @@ const CoreCanvas = dynamic(() => import("@/components/three/core-canvas"), {
   ssr: false,
 });
 
-/** Wait for the main thread to go idle so 3D never competes with LCP/hydration. */
-function whenIdle(callback: () => void) {
-  if ("requestIdleCallback" in window) {
-    const id = window.requestIdleCallback(callback, { timeout: 1500 });
-    return () => window.cancelIdleCallback(id);
-  }
-  const id = setTimeout(callback, 300);
-  return () => clearTimeout(id);
+/**
+ * Start the 3D only once the page has fully loaded and the main thread is
+ * idle: it never competes with LCP, hydration or the first interaction.
+ */
+function whenSettled(callback: () => void) {
+  let cancelIdle = () => {};
+  const idle = () => {
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(callback, { timeout: 2000 });
+      cancelIdle = () => window.cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(callback, 400);
+      cancelIdle = () => clearTimeout(id);
+    }
+  };
+  if (document.readyState === "complete") idle();
+  else window.addEventListener("load", idle, { once: true });
+  return () => {
+    window.removeEventListener("load", idle);
+    cancelIdle();
+  };
 }
 
 /**
@@ -57,7 +71,7 @@ export function HeroVisual() {
 
   useEffect(() => {
     if (capability !== "webgl") return;
-    return whenIdle(() => setArmed(true));
+    return whenSettled(() => setArmed(true));
   }, [capability]);
 
   // Next.js keeps visited routes mounted-but-hidden (<Activity>). R3F's loop
@@ -85,22 +99,24 @@ export function HeroVisual() {
           )}
         />
         {capability === "webgl" && armed ? (
-          <CoreCanvas
-            placement="hero"
-            reducedMotion={reducedMotion}
-            active={inView}
-            progress={progress}
-            callouts={callouts}
-            telemetry={telemetry}
-            onCreated={(state) => {
-              root.current = state;
-            }}
-            onReady={() => setReady(true)}
-            className={cn(
-              "opacity-0 transition-opacity duration-1500",
-              ready && "opacity-100",
-            )}
-          />
+          <CanvasBoundary>
+            <CoreCanvas
+              placement="hero"
+              reducedMotion={reducedMotion}
+              active={inView}
+              progress={progress}
+              callouts={callouts}
+              telemetry={telemetry}
+              onCreated={(state) => {
+                root.current = state;
+              }}
+              onReady={() => setReady(true)}
+              className={cn(
+                "opacity-0 transition-opacity duration-1500",
+                ready && "opacity-100",
+              )}
+            />
+          </CanvasBoundary>
         ) : null}
 
         {/* Holographic anatomy labels — positioned every frame by the scene. */}

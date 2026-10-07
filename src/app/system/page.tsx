@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Container } from "@/components/ui/container";
+import { person } from "@/content/site";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { DownloadLink } from "@/components/ui/download-link";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Panel } from "@/components/ui/panel";
 import { Rule } from "@/components/ui/rule";
@@ -74,7 +76,7 @@ const roles = [
   ["fg", "Primary text · 18.9:1"],
   ["fg-muted", "Body text · 9.8:1"],
   ["fg-subtle", "Secondary text · 6.3:1"],
-  ["fg-faint", "Decoration only · 3.7:1"],
+  ["fg-faint", "Tertiary labels · 5.1:1"],
   ["accent", "Action / focus"],
   ["accent-2", "Secondary emphasis"],
 ] as const;
@@ -356,6 +358,14 @@ export default function SystemPage() {
               </Button>
               <Button disabled>Disabled</Button>
             </div>
+            {person.resumeUrl ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <DownloadLink href={person.resumeUrl}>Download</DownloadLink>
+                <DownloadLink href={person.resumeUrl} size="sm">
+                  Download
+                </DownloadLink>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <Badge>Neutral tag</Badge>
               <Badge tone="accent">Accent</Badge>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { createRandom } from "@/lib/random";
+import { pointer, trackPointer } from "@/lib/pointer";
 import { palette } from "./config";
 import * as glsl from "./shaders";
 
@@ -155,24 +156,22 @@ export function Meteor() {
     [ribbon, sparks],
   );
 
+  // Reads the app-wide pointer source (one listener for every consumer).
   useEffect(() => {
+    trackPointer();
     const desktop = window.matchMedia(DESKTOP_POINTER);
-    const onMove = (event: PointerEvent) => {
+    const sync = () => {
       const c = cursor.current;
-      c.active = event.pointerType === "mouse" && desktop.matches;
-      c.x = event.clientX;
-      c.y = event.clientY;
-      c.lastMove = performance.now();
+      c.x = pointer.x.get();
+      c.y = pointer.y.get();
+      c.lastMove = pointer.lastMove.get();
+      c.active = desktop.matches && pointer.inside.get() === 1;
     };
-    // relatedTarget === null: the pointer left the window.
-    const onOut = (event: PointerEvent) => {
-      if (!event.relatedTarget) cursor.current.active = false;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    document.addEventListener("pointerout", onOut);
+    const offMove = pointer.lastMove.on("change", sync);
+    const offInside = pointer.inside.on("change", sync);
     return () => {
-      window.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerout", onOut);
+      offMove();
+      offInside();
     };
   }, []);
 

@@ -35,6 +35,7 @@ export function MobileNav() {
         size="icon"
         className="lg:hidden [&_svg]:size-5"
         aria-label="Open menu"
+        data-cursor="hand"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="site-menu"
