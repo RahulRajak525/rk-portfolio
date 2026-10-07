@@ -18,6 +18,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
     <Button
       variant="secondary"
       size="lg"
+      magnetic
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);

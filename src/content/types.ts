@@ -51,6 +51,8 @@ export interface Highlight {
   text: string;
   /** Links the highlight to its case study (`#project-<id>`). */
   projectId?: string;
+  /** Phrases given visual emphasis (must appear verbatim in `text`). */
+  emphasis?: readonly string[];
 }
 
 export interface TimelineEntry {

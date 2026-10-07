@@ -6,6 +6,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Eyebrow, Text } from "@/components/ui/typography";
 import { ArrowRightIcon, DownloadIcon } from "@/components/ui/icons";
+import { ScrambleText } from "@/components/motion/scramble-text";
+import { HeroCopy, HeroScene } from "./hero-scene";
 import { HeroVisual } from "./hero-visual";
 
 const delay = (ms: number) => ({ "--enter-delay": `${ms}ms` }) as CSSProperties;
@@ -16,15 +18,17 @@ const delay = (ms: number) => ({ "--enter-delay": `${ms}ms` }) as CSSProperties;
  * the copy on wide screens and above it on tall ones.
  *
  * Entrance choreography is CSS-only (data-enter) so it starts on first
- * paint, independent of JavaScript.
+ * paint, independent of JavaScript. Scroll choreography (copy lifts away,
+ * the core separates into its anatomy) lives in HeroScene/HeroVisual.
  */
 export function Hero() {
   const roleLines = person.role.split(" ");
 
   return (
-    <section
+    <HeroScene
       id="top"
       aria-labelledby="hero-title"
+      data-cursor-zone="minimal"
       className="relative isolate flex min-h-svh flex-col"
     >
       {/* Laboratory floor: a hairline grid focused on the core. */}
@@ -45,108 +49,113 @@ export function Hero() {
 
       <Container
         size="wide"
-        className="flex flex-1 flex-col justify-end pt-[53svh] pb-8 aspect-wide:justify-center aspect-wide:pt-[calc(var(--header-h)+2.5rem)]"
+        className="flex flex-1 flex-col pt-[53svh] pb-8 aspect-wide:pt-[calc(var(--header-h)+2.5rem)]"
       >
-        <div className="max-w-3xl">
-          <div
-            data-enter=""
-            style={delay(0)}
-            className="flex flex-wrap items-center gap-x-5 gap-y-3"
-          >
-            <Eyebrow index="00">Portfolio · {person.location}</Eyebrow>
-            {person.availability ? (
-              <Badge tone="positive">
-                <StatusDot pulse />
-                {person.availability}
-              </Badge>
-            ) : null}
-          </div>
-
-          <h1 id="hero-title" className="mt-7">
-            <span
+        <HeroCopy className="flex flex-1 flex-col justify-end aspect-wide:justify-center">
+          <div className="max-w-3xl">
+            <div
               data-enter=""
-              style={delay(80)}
-              className="block text-heading-lg font-medium text-fg"
+              style={delay(0)}
+              className="flex flex-wrap items-center gap-x-5 gap-y-3"
             >
-              {person.name}
-            </span>
-            <span className="sr-only"> — </span>
-            <span className="mt-3 block font-display text-display-2xl">
-              {roleLines.map((line, i) => (
-                <span key={line} className="line-mask">
-                  <span
-                    data-enter="rise"
-                    style={delay(140 + i * 90)}
-                    className={
-                      i === roleLines.length - 1 ? "text-gradient" : undefined
-                    }
-                  >
-                    {line}
-                  </span>{" "}
-                </span>
-              ))}
-            </span>
-          </h1>
+              <Eyebrow index="00">
+                <ScrambleText text={`Portfolio · ${person.location}`} />
+              </Eyebrow>
+              {person.availability ? (
+                <Badge tone="positive">
+                  <StatusDot pulse />
+                  {person.availability}
+                </Badge>
+              ) : null}
+            </div>
 
-          <Text
-            size="lg"
-            data-enter=""
-            style={delay(420)}
-            className="mt-7 max-w-2xl"
-          >
-            {person.tagline}
-          </Text>
-
-          <ul
-            data-enter=""
-            style={delay(500)}
-            aria-label="Core technologies"
-            className="mt-6 flex flex-wrap gap-2"
-          >
-            {person.coreStack.map((tech) => (
-              <li
-                key={tech}
-                className="rounded-xs border border-line-strong bg-canvas/40 px-2.5 py-1 type-label text-fg-muted"
+            <h1 id="hero-title" className="mt-7">
+              <span
+                data-enter=""
+                style={delay(80)}
+                className="block text-heading-lg font-medium text-fg"
               >
-                {tech}
-              </li>
-            ))}
-          </ul>
+                {person.name}
+              </span>
+              <span className="sr-only"> — </span>
+              <span className="mt-3 block font-display text-display-2xl">
+                {roleLines.map((line, i) => (
+                  <span key={line} className="line-mask">
+                    <span
+                      data-enter="rise-stretch"
+                      style={delay(140 + i * 90)}
+                      className={
+                        i === roleLines.length - 1 ? "text-gradient" : undefined
+                      }
+                    >
+                      {line}
+                    </span>{" "}
+                  </span>
+                ))}
+              </span>
+            </h1>
 
-          <div
-            data-enter=""
-            style={delay(580)}
-            className="mt-9 flex flex-wrap items-center gap-3"
-          >
-            <ButtonLink href={sectionHref("projects")} size="lg">
-              View projects
-              <ArrowRightIcon className="transition-transform duration-(--dur-base) ease-out-expo group-hover/button:translate-x-0.5" />
-            </ButtonLink>
-            <ButtonLink
-              href={sectionHref("contact")}
-              variant="secondary"
+            <Text
               size="lg"
+              data-enter=""
+              style={delay(420)}
+              className="mt-7 max-w-2xl"
             >
-              Get in touch
-            </ButtonLink>
-            {person.resumeUrl ? (
-              <ButtonLink
-                href={person.resumeUrl}
-                external
-                variant="ghost"
-                size="lg"
-                download
-              >
-                Résumé
-                <DownloadIcon />
-              </ButtonLink>
-            ) : null}
-          </div>
-        </div>
+              {person.tagline}
+            </Text>
 
-        <HeroFacts />
+            <ul
+              data-enter=""
+              style={delay(500)}
+              aria-label="Core technologies"
+              className="mt-6 flex flex-wrap gap-2"
+            >
+              {person.coreStack.map((tech) => (
+                <li
+                  key={tech}
+                  className="rounded-xs border border-line-strong bg-canvas/40 px-2.5 py-1 type-label text-fg-muted"
+                >
+                  {tech}
+                </li>
+              ))}
+            </ul>
+
+            <div
+              data-enter=""
+              style={delay(580)}
+              className="mt-9 flex flex-wrap items-center gap-3"
+            >
+              <ButtonLink href={sectionHref("projects")} size="lg" magnetic>
+                View projects
+                <ArrowRightIcon className="transition-transform duration-(--dur-base) ease-out-expo group-hover/button:translate-x-0.5" />
+              </ButtonLink>
+              <ButtonLink
+                href={sectionHref("contact")}
+                variant="secondary"
+                size="lg"
+                magnetic
+              >
+                Get in touch
+              </ButtonLink>
+              {person.resumeUrl ? (
+                <ButtonLink
+                  href={person.resumeUrl}
+                  external
+                  variant="ghost"
+                  size="lg"
+                  download
+                >
+                  Résumé
+                  <DownloadIcon />
+                </ButtonLink>
+              ) : null}
+            </div>
+          </div>
+
+          <HeroFacts />
+        </HeroCopy>
       </Container>
-    </section>
+    </HeroScene>
   );
 }
 

@@ -92,3 +92,25 @@ On load, the particle field converges ("signal → structure"). The `explode` pr
 - Adaptive quality tiers (DPR and particle count) are driven by `PerformanceMonitor`.
 - All animation runs on the GPU; there is no post-processing.
 - Fallbacks: no WebGL2 or Save-Data → static poster; reduced motion → single static frame.
+
+## Interaction system (Step 3)
+
+One rule: **the minimum technology for each effect.** CSS first, Motion where physics or pointer data are needed, WebGL only for the core. GSAP is intentionally absent — Motion + CSS sticky cover every effect, so adding it would duplicate ~70 KB.
+
+| Effect            | Technique                                                                                                                                                                                                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Smooth scrolling  | Lenis on the native scroll position, wheel/trackpad only. A capture-phase click handler smooth-scrolls in-page links, updates the hash and moves focus to the target.                                                                                                        |
+| Pointer           | One global listener writes `pointer` motion values (`src/lib/pointer.ts`), shared by the cursor, parallax and the 3D scene.                                                                                                                                                  |
+| Custom cursor     | A dot plus a spring-trailing ring. States: default, minimal (hero), link, morph (wraps `[data-magnetic]` controls), and label (`data-cursor="label" data-cursor-label="Drag"`). Moving the pointer never re-renders React.                                                   |
+| Magnetic controls | `magnetic` prop → `[data-magnetic]`. The cursor writes `--magnet-x/y` and CSS transitions the transform.                                                                                                                                                                     |
+| Header            | Transparent bar → floating glass capsule. Hides on scroll-down; returns on scroll-up, when the pointer nears the top edge, or on keyboard focus. Shared-element hover and active pills (Motion `layoutId`).                                                                  |
+| Hero              | CSS-only load choreography, and a headline that expands along the variable width axis. The 3D stage is fixed while the hero scrolls: the core glides to centre and separates into layers with DOM callouts projected every frame. Camera parallax and a cursor-driven light. |
+| Section entrances | The index decodes (`ScrambleText`), the title rises word by word (`SplitReveal`), and rules and key-phrase underlines draw via CSS `animation-timeline: view()`.                                                                                                             |
+| Ambient           | `html[data-section]` re-lights the atmosphere per section (CSS transitions on two compositor layers).                                                                                                                                                                        |
+| Experience        | Rail fill and node ignition (scroll-linked), 3D card entrance (`DepthReveal`), badge pop stagger, and stat count-up.                                                                                                                                                         |
+| Projects          | Scroll-driven chapters with a sticky tilt stage (preserve-3d depth layers and glare). Morphs between projects.                                                                                                                                                               |
+| Capabilities      | The SVG stack sphere: drag with inertia, cursor tilt, scroll turn, card-hover focus, filter lighting. The rAF loop runs only while on screen.                                                                                                                                |
+
+**Mobile strategy.** Touch devices keep native momentum scrolling and get no custom cursor, magnetism or tilt. The scroll choreography stays because it is input-agnostic. Hover effects become in-view effects: schematics animate while visible. The sphere spins on horizontal swipes (`touch-action: pan-y` keeps vertical scrolling native) and hides skill labels.
+
+**Reduced motion.** The cursor and smooth scrolling are disabled. Scroll-scrubbed elements carry `[data-scroll-linked]` and are neutralised by one CSS rule, so server and client render identical markup and nothing branches in JS. The 3D core renders a single static frame, and the sphere stops auto-rotating.

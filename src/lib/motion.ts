@@ -67,3 +67,9 @@ export const revealGroupVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: stagger.base } },
 } satisfies Variants;
+
+/** Small UI tokens (badges, chips) arriving: a quick springy pop. */
+export const popVariants = {
+  hidden: { opacity: 0, scale: 0.82, y: 6 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: spring.snappy },
+} satisfies Variants;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type RefObject } from "react";
+import type { MotionValue } from "motion/react";
 import { Canvas, useFrame, type RootState } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import type { Store } from "@/lib/store";
@@ -16,6 +17,10 @@ type CoreCanvasProps = {
   /** false pauses the render loop entirely (e.g. scrolled out of view). */
   active: boolean;
   explode?: number;
+  /** Hero scroll-out progress (0 → 1) driving the anatomy transformation. */
+  progress?: MotionValue<number>;
+  /** DOM labels the scene positions over its layers each frame. */
+  callouts?: RefObject<(HTMLDivElement | null)[]>;
   telemetry?: Store<CoreTelemetry>;
   onReady?: () => void;
   onCreated?: (state: RootState) => void;
@@ -43,6 +48,8 @@ export default function CoreCanvas({
   reducedMotion,
   active,
   explode = 0,
+  progress,
+  callouts,
   telemetry,
   onReady,
   onCreated,
@@ -78,6 +85,8 @@ export default function CoreCanvas({
         reducedMotion={reducedMotion}
         placement={placement}
         explode={explode}
+        progress={progress}
+        callouts={callouts}
       />
       {placement === "hero" && !reducedMotion ? <Meteor /> : null}
       <Probe tier={tier} telemetry={telemetry} onReady={onReady} />

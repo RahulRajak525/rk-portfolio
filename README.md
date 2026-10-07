@@ -2,11 +2,11 @@
 
 A premium, futuristic portfolio built as a production-grade frontend codebase.
 
-> **Status: Step 2 of 4 — content.** All content comes from the résumé (`src/content/`). Missing links (LinkedIn, GitHub, Kora demo/source, résumé PDF) are marked `TODO` and their UI stays hidden until filled.
+> **Status: Step 3 of 4 — interaction.** Content from the résumé, plus the interaction system: smooth scrolling, custom cursor, magnetic controls, scroll-driven 3D hero anatomy, cinematic timeline, project stage and the stack sphere. Missing links (LinkedIn, GitHub, Kora source, résumé PDF) are marked `TODO`.
 
 ## Stack
 
-Next.js 16.4 (App Router, Turbopack, Cache Components) · React 19.3 · TypeScript (strict) · Tailwind CSS 4.3 · Motion 14 · three.js r186 + React Three Fiber 9 + drei
+Next.js 16.4 (App Router, Turbopack, Cache Components) · React 19.3 · TypeScript (strict) · Tailwind CSS 4.3 · Motion 14 · Lenis · three.js r186 + React Three Fiber 9 + drei
 
 ## Scripts
 
@@ -54,5 +54,5 @@ docs/design-system.md    tokens, rules and principles
 
 1. ✅ Foundation — architecture, design system, shell, hero, 3D experiment
 2. ✅ Content — résumé data; Experience timeline, project case studies, capabilities explorer, About, Contact
-3. Depth — case-study detail, scroll storytelling with the core
+3. ✅ Interaction — scroll storytelling with the core, cursor system, timeline, project stage, stack sphere
 4. Polish — performance and accessibility audit, deployment

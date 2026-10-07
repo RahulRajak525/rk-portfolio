@@ -5,6 +5,7 @@
 @import "../styles/base.css";
 @import "../styles/utilities.css";
 @import "../styles/effects.css";
+@import "../styles/interaction.css";
 
 /* Landscape compositions (matches the 3D core's side-by-side layout rule). */
 @custom-variant aspect-wide {

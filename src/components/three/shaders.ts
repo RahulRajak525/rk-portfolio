@@ -72,16 +72,21 @@ export const shellFragment = /* glsl */ `
   uniform float uTime;
   uniform float uOpacity;
   uniform float uBoost;
+  uniform vec3 uLight;        // view-space direction, follows the pointer
+  uniform float uLightAmount;
   varying vec3 vNormal;
   varying vec3 vView;
   varying vec3 vLocal;
   void main() {
-    float fresnel = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.2);
+    vec3 n = normalize(vNormal);
+    float fresnel = pow(1.0 - abs(dot(n, normalize(vView))), 2.2);
     float scanY = sin(uTime * 0.42) * 1.7;
     float band = exp(-pow((vLocal.y - scanY) * 3.2, 2.0));
+    // Flat facets + a narrow lobe = glints that travel across the crystal.
+    float glint = pow(max(dot(n, normalize(uLight)), 0.0), 14.0) * uLightAmount;
     vec3 color = mix(uColorA, uColorB, clamp(vLocal.y * 0.3 + 0.5, 0.0, 1.0));
-    float alpha = (0.025 + fresnel * 0.38 + band * 0.08 + uBoost * 0.2) * uOpacity;
-    gl_FragColor = vec4(color * (0.55 + fresnel * 0.9 + band * 0.5), alpha);
+    float alpha = (0.025 + fresnel * 0.38 + band * 0.08 + uBoost * 0.2 + glint * 0.3) * uOpacity;
+    gl_FragColor = vec4(color * (0.55 + fresnel * 0.9 + band * 0.5) + uColorA * glint * 1.3, alpha);
     #include <colorspace_fragment>
   }
 `;

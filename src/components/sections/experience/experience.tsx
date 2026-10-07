@@ -1,18 +1,39 @@
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { experienceStats, timeline } from "@/content/experience";
 import { getSection } from "@/content/sections";
-import type { TimelineEntry } from "@/content/types";
+import type { Highlight, TimelineEntry } from "@/content/types";
 import { cn } from "@/lib/cn";
 import { Section, SectionHeader } from "@/components/ui/section";
 import { Panel } from "@/components/ui/panel";
-import { Badge, StatusDot } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Text } from "@/components/ui/typography";
 import { ArrowRightIcon } from "@/components/ui/icons";
-import { Reveal } from "@/components/motion/reveal";
+import { CountUp } from "@/components/motion/count-up";
+import { DepthReveal } from "@/components/motion/depth-reveal";
+import { RevealGroup, RevealItem } from "@/components/motion/reveal";
+import { TimelineNode } from "./timeline-node";
 import { TimelineTrack } from "./timeline-track";
 
 const section = getSection("experience");
+
+/** Wraps the highlight's key phrases in <em class="emph"> (CSS draws the underline on scroll). */
+function withEmphasis({ text, emphasis = [] }: Highlight): ReactNode {
+  if (emphasis.length === 0) return text;
+  const pattern = new RegExp(
+    `(${emphasis.map((phrase) => phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+  );
+  return text.split(pattern).map((part, i) =>
+    emphasis.includes(part) ? (
+      <em key={i} className="emph not-italic">
+        {part}
+      </em>
+    ) : (
+      <Fragment key={i}>{part}</Fragment>
+    ),
+  );
+}
 
 export function Experience() {
   return (
@@ -38,9 +59,10 @@ export function Experience() {
                 <div key={stat.label}>
                   <dt className="sr-only">{stat.label}</dt>
                   <dd>
-                    <span className="block font-display text-heading-lg text-fg tabular-nums">
-                      {stat.value}
-                    </span>
+                    <CountUp
+                      value={stat.value}
+                      className="block font-display text-heading-lg text-fg tabular-nums"
+                    />
                     <span className="mt-1 block text-body-sm text-fg-subtle">
                       {stat.label}
                     </span>
@@ -70,24 +92,9 @@ function TimelineItem({ entry }: { entry: TimelineEntry }) {
 
   return (
     <li className="relative pl-10 md:pl-14">
-      {/* Node on the rail */}
-      <span
-        aria-hidden="true"
-        className={cn(
-          "absolute top-1 left-0 grid size-[15px] place-items-center rounded-full border bg-canvas",
-          entry.current
-            ? "border-ion-400 shadow-[0_0_14px_var(--color-ion-400)]"
-            : "border-line-strong",
-        )}
-      >
-        {entry.current ? (
-          <StatusDot tone="accent" pulse className="size-1.5" />
-        ) : (
-          <span className="size-1.5 rounded-full bg-fg-faint" />
-        )}
-      </span>
+      <TimelineNode current={entry.current} />
 
-      <Reveal>
+      <DepthReveal>
         <p className="flex flex-wrap items-center gap-x-3 gap-y-2 type-label text-fg-subtle">
           <span className="tabular-nums">
             {entry.start} — {entry.end}
@@ -113,41 +120,53 @@ function TimelineItem({ entry }: { entry: TimelineEntry }) {
 
         {entry.highlights.length > 0 ? (
           <ul className="mt-7 divide-y divide-line border-y border-line">
-            {entry.highlights.map((highlight, i) => (
-              <li key={highlight.text} className="flex gap-4 py-4">
-                <span
-                  aria-hidden="true"
-                  className="pt-0.5 type-label text-fg-faint tabular-nums"
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="text-body-sm text-fg-muted">
-                  {highlight.text}
-                  {highlight.projectId ? (
-                    <Link
-                      href={`/#project-${highlight.projectId}` as Route}
-                      className="group/case ml-2 inline-flex items-center gap-1 whitespace-nowrap text-accent transition-colors hover:text-accent-strong"
-                    >
-                      Case study
-                      <ArrowRightIcon className="size-3.5 transition-transform group-hover/case:translate-x-0.5" />
-                    </Link>
+            {entry.highlights.map((highlight, i) => {
+              const featured = Boolean(highlight.projectId);
+              return (
+                <li key={highlight.text} className="relative flex gap-4 py-4">
+                  {featured ? (
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-4 bottom-4 -left-3 w-px bg-linear-to-b from-accent to-transparent"
+                    />
                   ) : null}
-                </span>
-              </li>
-            ))}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "pt-0.5 type-label tabular-nums",
+                      featured ? "text-accent" : "text-fg-faint",
+                    )}
+                  >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-body-sm text-fg-muted">
+                    {withEmphasis(highlight)}
+                    {highlight.projectId ? (
+                      <Link
+                        href={`/#project-${highlight.projectId}` as Route}
+                        className="group/case ml-2 inline-flex items-center gap-1 whitespace-nowrap text-accent transition-colors hover:text-accent-strong"
+                      >
+                        Case study
+                        <ArrowRightIcon className="size-3.5 transition-transform group-hover/case:translate-x-0.5" />
+                      </Link>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         ) : null}
 
         {entry.stack.length > 0 ? (
-          <ul aria-label="Technologies" className="mt-6 flex flex-wrap gap-2">
+          <RevealGroup as="ul" className="mt-6 flex flex-wrap gap-2">
             {entry.stack.map((tech) => (
-              <li key={tech}>
+              <RevealItem as="li" key={tech} variant="pop">
                 <Badge>{tech}</Badge>
-              </li>
+              </RevealItem>
             ))}
-          </ul>
+          </RevealGroup>
         ) : null}
-      </Reveal>
+      </DepthReveal>
     </li>
   );
 }

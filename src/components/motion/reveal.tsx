@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import * as m from "motion/react-m";
-import { revealGroupVariants, revealVariants } from "@/lib/motion";
+import { popVariants, revealGroupVariants, revealVariants } from "@/lib/motion";
 
 /**
  * Scroll-triggered entrances. Purpose: pace information as it arrives so
@@ -80,10 +80,18 @@ export function RevealItem({
   children,
   className,
   as = "div",
-}: Omit<RevealProps, "delay">) {
+  variant = "rise",
+}: Omit<RevealProps, "delay"> & {
+  /** rise: content blocks · pop: small tokens such as badges. */
+  variant?: "rise" | "pop";
+}) {
   const Component = tags[as];
   return (
-    <Component data-reveal="" className={className} variants={revealVariants}>
+    <Component
+      data-reveal=""
+      className={className}
+      variants={variant === "pop" ? popVariants : revealVariants}
+    >
       {children}
     </Component>
   );

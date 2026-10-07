@@ -9,8 +9,8 @@ import type { CaseVisualKind } from "@/content/types";
 
 const line = "fill-none stroke-line-strong";
 const accent = "fill-none stroke-accent";
-const flow =
-  "fill-none stroke-accent [stroke-dasharray:4_4] pointer-fine:group-hover/case:animate-dash-flow motion-reduce:animate-none";
+/** Data-flow paths; whether they animate is decided by data-flow (CSS). */
+const flow = "flow-path fill-none stroke-accent";
 const faint = "fill-none stroke-line-strong [stroke-dasharray:3_3]";
 
 function Label({
@@ -241,13 +241,25 @@ const visuals: Record<CaseVisualKind, () => ReactNode> = {
   commerce: Commerce,
 };
 
-export function CaseVisual({ kind }: { kind: CaseVisualKind }) {
+/**
+ * flow: when the data-flow dashes animate —
+ * "hover" (inside a [data-flow-host] being hovered), "always" (focal stage),
+ * "inview" (inside an InViewFlag — the touch-device stand-in for hover).
+ */
+export function CaseVisual({
+  kind,
+  flow: mode = "hover",
+}: {
+  kind: CaseVisualKind;
+  flow?: "hover" | "always" | "inview";
+}) {
   const Visual = visuals[kind];
   return (
     <svg
       viewBox="0 0 320 170"
       aria-hidden="true"
       focusable="false"
+      data-flow={mode}
       className="h-auto w-full"
       strokeWidth={1}
       vectorEffect="non-scaling-stroke"

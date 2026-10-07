@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { person } from "@/content/site";
 import { sectionHref } from "@/content/sections";
-import { Container } from "@/components/ui/container";
 import { ButtonLink } from "@/components/ui/button";
 import { BrandMark } from "./brand-mark";
 import { DesktopNav } from "./desktop-nav";
@@ -11,52 +10,48 @@ import { MobileNav } from "./mobile-nav";
 export function SiteHeader() {
   return (
     <HeaderShell>
-      <Container
-        size="wide"
-        className="flex h-header items-center justify-between gap-6"
+      <Link
+        href="/"
+        className="group/brand -m-2 flex items-center gap-3 rounded-full p-2"
+        aria-label={`${person.name}, home`}
       >
-        <Link
-          href="/"
-          className="group/brand -m-2 flex items-center gap-3 rounded-full p-2"
-          aria-label={`${person.name}, home`}
-        >
-          <BrandMark className="size-7 text-fg transition-transform duration-(--dur-slow) ease-out-expo group-hover/brand:rotate-60" />
-          <span className="hidden flex-col leading-none sm:flex">
-            <span className="text-body-sm font-semibold tracking-tight text-fg">
-              {person.name}
-            </span>
-            <span className="mt-1 type-micro text-fg-subtle">
-              {person.role}
-            </span>
+        <BrandMark className="size-7 text-fg transition-transform duration-(--dur-slow) ease-out-expo group-hover/brand:rotate-60" />
+        <span className="hidden flex-col leading-none sm:flex">
+          <span className="text-body-sm font-semibold tracking-tight text-fg">
+            {person.name}
           </span>
-        </Link>
+          <span className="mt-1 type-micro text-fg-subtle transition-opacity duration-500 group-data-[floating=true]/header:hidden">
+            {person.role}
+          </span>
+        </span>
+      </Link>
 
-        <DesktopNav />
+      <DesktopNav />
 
-        <div className="flex items-center gap-2">
-          {person.resumeUrl ? (
-            <ButtonLink
-              href={person.resumeUrl}
-              external
-              download
-              variant="ghost"
-              size="sm"
-              className="hidden sm:inline-flex"
-            >
-              Résumé
-            </ButtonLink>
-          ) : null}
+      <div className="flex items-center gap-2">
+        {person.resumeUrl ? (
           <ButtonLink
-            href={sectionHref("contact")}
-            variant="secondary"
+            href={person.resumeUrl}
+            external
+            download
+            variant="ghost"
             size="sm"
             className="hidden sm:inline-flex"
           >
-            Contact
+            Résumé
           </ButtonLink>
-          <MobileNav />
-        </div>
-      </Container>
+        ) : null}
+        <ButtonLink
+          href={sectionHref("contact")}
+          variant="secondary"
+          size="sm"
+          magnetic
+          className="hidden sm:inline-flex"
+        >
+          Contact
+        </ButtonLink>
+        <MobileNav />
+      </div>
     </HeaderShell>
   );
 }

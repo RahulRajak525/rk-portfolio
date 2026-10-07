@@ -5,6 +5,7 @@ import { Panel } from "@/components/ui/panel";
 import { Rule } from "@/components/ui/rule";
 import { Text } from "@/components/ui/typography";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/reveal";
+import { ScrollWords } from "@/components/motion/scroll-words";
 
 const section = getSection("about");
 
@@ -23,15 +24,17 @@ export function About() {
       <div className="mt-14 grid gap-14 lg:mt-20 lg:grid-cols-12 lg:gap-grid">
         <div className="lg:col-span-6">
           <Reveal className="space-y-6">
-            {story.map((paragraph, i) => (
-              <Text
-                key={paragraph}
-                size={i === 0 ? "lg" : "md"}
-                tone={i === 0 ? "default" : "muted"}
-              >
-                {paragraph}
-              </Text>
-            ))}
+            {story.map((paragraph, i) =>
+              i === 0 ? (
+                <ScrollWords
+                  key={paragraph}
+                  text={paragraph}
+                  className="text-body-lg text-fg"
+                />
+              ) : (
+                <Text key={paragraph}>{paragraph}</Text>
+              ),
+            )}
           </Reveal>
 
           <div className="mt-12 grid gap-3 sm:grid-cols-2">

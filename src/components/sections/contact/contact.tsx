@@ -15,6 +15,7 @@ import {
   PinIcon,
 } from "@/components/ui/icons";
 import { Reveal } from "@/components/motion/reveal";
+import { SplitReveal } from "@/components/motion/split-reveal";
 import { CopyButton } from "./copy-button";
 
 const section = getSection("contact");
@@ -100,8 +101,12 @@ export function Contact() {
             id={`${section.id}-title`}
             className="mt-6 max-w-4xl font-display text-display-xl text-fg"
           >
-            Let&apos;s build the{" "}
-            <span className="text-gradient">next interface.</span>
+            <SplitReveal text="Let’s build the" />
+            <SplitReveal
+              text="next interface."
+              wordClassName="text-gradient"
+              delay={0.12}
+            />
           </h2>
           <Text size="lg" className="mt-6 max-w-xl">
             {section.description} I&apos;m based in Ghaziabad, India, and
@@ -110,7 +115,12 @@ export function Contact() {
 
           {person.email ? (
             <div className="mt-10 flex flex-wrap items-center gap-3">
-              <ButtonLink href={`mailto:${person.email}`} external size="lg">
+              <ButtonLink
+                href={`mailto:${person.email}`}
+                external
+                magnetic
+                size="lg"
+              >
                 <MailIcon />
                 Send an email
               </ButtonLink>

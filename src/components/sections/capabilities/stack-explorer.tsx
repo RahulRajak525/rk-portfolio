@@ -1,70 +1,37 @@
 "use client";
 
 import { useState } from "react";
+import * as m from "motion/react-m";
 import { evidence, skillGroups } from "@/content/skills";
 import type { EvidenceId, Skill } from "@/content/types";
 import { cn } from "@/lib/cn";
+import { spring } from "@/lib/motion";
+import { StackSphere } from "./stack-sphere";
 
 type Filter = EvidenceId | "all";
 
-const TAU = Math.PI * 2;
 const totalSkills = skillGroups.reduce(
   (sum, group) => sum + group.skills.length,
   0,
 );
-
-/** Short labels keep the constellation legible at its size. */
-const shortLabels: Record<string, string> = {
-  languages: "Languages",
-  frameworks: "Frameworks",
-  ui: "UI",
-  state: "State",
-  backend: "Backend",
-  integrations: "Integrations",
-  delivery: "Delivery",
-  ai: "AI",
-};
-
-/** Radial layout, computed once: domains orbit the core, skills orbit domains. */
-const layout = skillGroups.map((group, gi) => {
-  const angle = -Math.PI / 2 + (gi / skillGroups.length) * TAU;
-  const cx = Math.cos(angle) * 140;
-  const cy = Math.sin(angle) * 140;
-  const spread = 0.5;
-  const nodes = group.skills.map((skill, si) => {
-    const a = angle + (si - (group.skills.length - 1) / 2) * spread;
-    return {
-      skill,
-      x: +(cx + Math.cos(a) * 62).toFixed(2),
-      y: +(cy + Math.sin(a) * 62).toFixed(2),
-      a,
-    };
-  });
-  const cos = Math.cos(angle);
-  return {
-    group,
-    cx: +cx.toFixed(2),
-    cy: +cy.toFixed(2),
-    nodes,
-    label: {
-      x: +(Math.cos(angle) * 236).toFixed(2),
-      y: +(Math.sin(angle) * 236 + 3).toFixed(2),
-      anchor: cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle",
-    } as const,
-  };
-});
 
 const isLit = (skill: Skill, filter: Filter) =>
   filter === "all" || skill.usedIn.includes(filter);
 
 /**
  * Capabilities explorer. The cards are the accessible source of truth; the
- * constellation (desktop) mirrors them visually. Filtering by evidence
+ * stack sphere mirrors them as an object you can turn. Filtering by evidence
  * answers the recruiter's real question: "where did you actually use this?"
+ *
+ * Coupling: hovering a card rotates the sphere to that domain; hovering the
+ * sphere highlights the matching card (it never rotates itself toward the
+ * pointer — that would chase the cursor).
  */
 export function StackExplorer() {
   const [filter, setFilter] = useState<Filter>("all");
-  const [focus, setFocus] = useState<string | null>(null);
+  const [cardFocus, setCardFocus] = useState<string | null>(null);
+  const [sphereHover, setSphereHover] = useState<string | null>(null);
+  const highlighted = cardFocus ?? sphereHover;
 
   const lit = skillGroups.reduce(
     (sum, group) =>
@@ -87,9 +54,17 @@ export function StackExplorer() {
               type="button"
               aria-pressed={filter === option.id}
               onClick={() => setFilter(option.id)}
-              className="rounded-full border border-line-strong px-4 py-2 text-body-sm text-fg-muted transition-[background-color,border-color,color] duration-(--dur-fast) hover:border-line-accent hover:text-fg aria-pressed:border-ion-400/60 aria-pressed:bg-ion-400/12 aria-pressed:text-fg"
+              className="relative rounded-full border border-line-strong px-4 py-2 text-body-sm text-fg-muted transition-colors duration-(--dur-fast) hover:border-line-accent hover:text-fg aria-pressed:text-fg"
             >
-              {option.label}
+              {filter === option.id ? (
+                <m.span
+                  layoutId="evidence-pill"
+                  aria-hidden="true"
+                  className="absolute -inset-px rounded-full border border-ion-400/60 bg-ion-400/12"
+                  transition={spring.snappy}
+                />
+              ) : null}
+              <span className="relative">{option.label}</span>
             </button>
           ))}
         </div>
@@ -100,10 +75,17 @@ export function StackExplorer() {
         </p>
       </div>
 
-      <div className="mt-10 grid gap-grid lg:grid-cols-12">
-        <div className="hidden lg:col-span-5 lg:block">
-          <div className="sticky top-[calc(var(--header-h)+2rem)]">
-            <Constellation filter={filter} focus={focus} />
+      <div className="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-grid">
+        <div className="lg:col-span-5">
+          <div className="lg:sticky lg:top-[calc(var(--header-h)+2rem)]">
+            <StackSphere
+              filter={filter}
+              focus={cardFocus}
+              onHoverGroup={setSphereHover}
+            />
+            <p className="mt-2 hidden text-center type-micro text-fg-faint lg:block">
+              Drag to rotate · hover a domain to bring it forward
+            </p>
           </div>
         </div>
 
@@ -112,14 +94,17 @@ export function StackExplorer() {
             const groupLit = group.skills.filter((skill) =>
               isLit(skill, filter),
             ).length;
+            const active = highlighted === group.id;
             return (
               <li
                 key={group.id}
-                onMouseEnter={() => setFocus(group.id)}
-                onMouseLeave={() => setFocus(null)}
+                onMouseEnter={() => setCardFocus(group.id)}
+                onMouseLeave={() => setCardFocus(null)}
                 className={cn(
-                  "rounded-lg border bg-surface-solid/80 p-5 transition-colors duration-(--dur-base)",
-                  focus === group.id ? "border-line-accent" : "border-line",
+                  "rounded-lg border bg-surface-solid/80 p-5 transition-[border-color,translate,box-shadow] duration-(--dur-base) ease-out-quart",
+                  active
+                    ? "-translate-y-0.5 border-line-accent shadow-[0_18px_40px_-24px_oklch(0.81_0.14_206/0.5)]"
+                    : "border-line",
                 )}
               >
                 <h3 className="flex items-center justify-between gap-3 type-label text-fg">
@@ -158,126 +143,5 @@ export function StackExplorer() {
         </ul>
       </div>
     </div>
-  );
-}
-
-function Constellation({
-  filter,
-  focus,
-}: {
-  filter: Filter;
-  focus: string | null;
-}) {
-  return (
-    <svg
-      viewBox="-320 -270 640 540"
-      aria-hidden="true"
-      focusable="false"
-      className="h-auto w-full"
-    >
-      <circle
-        r={140}
-        className="fill-none stroke-line [stroke-dasharray:2_6]"
-      />
-      <circle r={202} className="fill-none stroke-line" />
-
-      {layout.map(({ group, cx, cy, nodes, label }) => {
-        const dimmed = focus !== null && focus !== group.id;
-        const focused = focus === group.id;
-        return (
-          <g
-            key={group.id}
-            className={cn(
-              "transition-opacity duration-(--dur-base)",
-              dimmed && "opacity-25",
-            )}
-          >
-            <line
-              x1={0}
-              y1={0}
-              x2={cx}
-              y2={cy}
-              className={focused ? "stroke-accent" : "stroke-line-strong"}
-            />
-            {nodes.map(({ skill, x, y, a }) => {
-              const on = isLit(skill, filter);
-              const highlight = on && (filter !== "all" || focused);
-              return (
-                <g key={skill.name}>
-                  <line
-                    x1={cx}
-                    y1={cy}
-                    x2={x}
-                    y2={y}
-                    className={highlight ? "stroke-accent/70" : "stroke-line"}
-                  />
-                  {highlight ? (
-                    <circle cx={x} cy={y} r={11} className="fill-ion-400/15" />
-                  ) : null}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={highlight ? 5 : 4}
-                    className={cn(
-                      "transition-[fill,opacity] duration-(--dur-base)",
-                      highlight ? "fill-accent" : "fill-ink-500",
-                      !on && "opacity-30",
-                    )}
-                  />
-                  {focused ? (
-                    <text
-                      x={x + Math.cos(a) * 10}
-                      y={y + Math.sin(a) * 10 + 3}
-                      textAnchor={
-                        Math.cos(a) > 0.2
-                          ? "start"
-                          : Math.cos(a) < -0.2
-                            ? "end"
-                            : "middle"
-                      }
-                      fontSize={10}
-                      className="fill-fg"
-                    >
-                      {skill.name}
-                    </text>
-                  ) : null}
-                </g>
-              );
-            })}
-            <circle
-              cx={cx}
-              cy={cy}
-              r={6}
-              className={cn(
-                "stroke-1",
-                focused
-                  ? "fill-canvas stroke-accent"
-                  : "fill-canvas stroke-line-strong",
-              )}
-            />
-            {!focused ? (
-              <text
-                x={label.x}
-                y={label.y}
-                textAnchor={label.anchor}
-                fontSize={10}
-                letterSpacing={1.4}
-                className="fill-fg-subtle font-mono uppercase"
-              >
-                {shortLabels[group.id] ?? group.label}
-              </text>
-            ) : null}
-          </g>
-        );
-      })}
-
-      {/* The core: same mark as the brand and the 3D object. */}
-      <polygon
-        points="0,-24 20.8,-12 20.8,12 0,24 -20.8,12 -20.8,-12"
-        className="fill-canvas stroke-line-accent"
-      />
-      <circle r={16} className="fill-ion-400/15" />
-      <circle r={6} className="fill-accent" />
-    </svg>
   );
 }

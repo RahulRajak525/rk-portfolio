@@ -1,6 +1,6 @@
 // Loaded asynchronously by <LazyMotion> so animation code never blocks
-// first paint or hydration. domAnimation covers animate/variants/inView/
-// gestures; upgrade to domMax only if layout animations are introduced.
-import { domAnimation } from "motion/react";
+// first paint or hydration. domMax adds layout animations on top of
+// domAnimation — used for shared-element indicators (nav, filters).
+import { domMax } from "motion/react";
 
-export default domAnimation;
+export default domMax;

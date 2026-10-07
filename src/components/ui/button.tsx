@@ -16,7 +16,7 @@ export const buttonVariants = cva(
   [
     "group/button relative isolate inline-flex shrink-0 items-center justify-center gap-2",
     "rounded-full font-medium whitespace-nowrap select-none",
-    "transition-[background-color,border-color,color,box-shadow,translate]",
+    "transition-[background-color,border-color,color,box-shadow,translate,transform]",
     "duration-(--dur-fast) ease-out-quart",
     "active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
     "[&_svg]:size-4 [&_svg]:shrink-0",
@@ -48,7 +48,10 @@ export const buttonVariants = cva(
   },
 );
 
-type ButtonVariantProps = VariantProps<typeof buttonVariants>;
+type ButtonVariantProps = VariantProps<typeof buttonVariants> & {
+  /** Drifts toward the pointer; the custom cursor wraps it (fine pointers). */
+  magnetic?: boolean;
+};
 
 /** Light sweep across the primary button on hover — affordance, not decoration. */
 function Sheen() {
@@ -82,6 +85,7 @@ export type ButtonProps = ComponentProps<"button"> & ButtonVariantProps;
 export function Button({
   variant,
   size,
+  magnetic,
   className,
   type = "button",
   children,
@@ -90,6 +94,7 @@ export function Button({
   return (
     <button
       type={type}
+      data-magnetic={magnetic || undefined}
       className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     >
@@ -118,6 +123,7 @@ export function ButtonLink(props: ButtonLinkProps) {
     const {
       variant,
       size,
+      magnetic,
       className,
       children,
       external: _external,
@@ -128,6 +134,7 @@ export function ButtonLink(props: ButtonLinkProps) {
     return (
       <a
         href={href}
+        data-magnetic={magnetic || undefined}
         className={cn(buttonVariants({ variant, size }), className)}
         {...(isWeb ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         {...rest}
@@ -140,6 +147,7 @@ export function ButtonLink(props: ButtonLinkProps) {
   const {
     variant,
     size,
+    magnetic,
     className,
     children,
     external: _external,
@@ -147,6 +155,7 @@ export function ButtonLink(props: ButtonLinkProps) {
   } = props;
   return (
     <Link
+      data-magnetic={magnetic || undefined}
       className={cn(buttonVariants({ variant, size }), className)}
       {...rest}
     >

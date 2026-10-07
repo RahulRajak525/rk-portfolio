@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type RefObject } from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree, type RootState } from "@react-three/fiber";
+import type { MotionValue } from "motion/react";
 import { createRandom } from "@/lib/random";
+import { pointer, trackPointer } from "@/lib/pointer";
 import {
   layers,
   MAX_PARTICLES,
@@ -26,10 +28,12 @@ import * as glsl from "./shaders";
  *   orbits    → interaction/motion (data packets travelling the system)
  *   particles → signal & data      (noise that converges into structure)
  *
- * On load the particle field converges ("signal → structure"); every few
- * seconds the nucleus emits a pulse that propagates outward through each
- * layer in turn. `explode` separates the layers (anatomy view) — the hook
- * for later scroll-driven storytelling.
+ * Behaviour:
+ * - load: the particle field converges ("signal → structure");
+ * - idle: the nucleus emits a pulse that propagates through every layer;
+ * - pointer: camera parallax + a light that glints off the shell facets;
+ * - scroll (hero): the core glides to centre and separates into its layers,
+ *   with DOM callouts projected onto each layer every frame.
  */
 
 export type CorePlacement = "hero" | "center";
@@ -40,12 +44,24 @@ type InterfaceCoreProps = {
   placement: CorePlacement;
   /** 0 = assembled, 1 = layers separated. */
   explode?: number;
+  /** Hero scroll-out progress (0 → 1). */
+  progress?: MotionValue<number>;
+  /** DOM labels positioned over the layers each frame. */
+  callouts?: RefObject<(HTMLDivElement | null)[]>;
 };
 
 const TAU = Math.PI * 2;
 const INTRO_SECONDS = 2.8;
 /** Pose rendered when motion is reduced: intro complete, comets spread out. */
 const STATIC_TIME = 7.3;
+const CAMERA_Z = 11;
+/** How far each layer travels outward at full separation (scale delta). */
+const SEPARATION = {
+  lattice: 0.3,
+  shell: 0.6,
+  orbits: 0.45,
+  field: 0.18,
+} as const;
 
 const rings = [
   {
@@ -79,6 +95,42 @@ const rings = [
     offset: 0.7,
   },
 ] as const;
+
+/**
+ * Callout anchors: fixed screen-stable directions around the core (in the
+ * root group's space), each at its layer's current radius. Every layer is a
+ * sphere, so a fixed direction always lands on it — while the labels stay
+ * evenly spread instead of riding the spinning geometry. Order matches
+ * CALLOUTS: nucleus, lattice, shell, orbits, field.
+ */
+const anchors = [
+  {
+    dir: new THREE.Vector3(-1, -0.12, 0.2).normalize(),
+    radius: layers.nucleus,
+    sep: 0,
+  },
+  {
+    dir: new THREE.Vector3(-0.62, 0.74, 0.25).normalize(),
+    radius: layers.lattice,
+    sep: SEPARATION.lattice,
+  },
+  {
+    dir: new THREE.Vector3(1, 0.12, 0.2).normalize(),
+    radius: layers.shell,
+    sep: SEPARATION.shell,
+  },
+  {
+    dir: new THREE.Vector3(0.55, 0.84, 0).normalize(),
+    radius: layers.orbits[0],
+    sep: SEPARATION.orbits,
+  },
+  {
+    dir: new THREE.Vector3(-0.78, -0.62, 0).normalize(),
+    radius: 3,
+    sep: SEPARATION.field,
+  },
+] as const;
+const projected = new THREE.Vector3();
 
 /* ---- Geometry (deterministic, built once) ------------------------------ */
 
@@ -172,6 +224,8 @@ function buildUniforms() {
       uTime: { value: 0 },
       uOpacity: { value: 1 },
       uBoost: { value: 0 },
+      uLight: { value: new THREE.Vector3(0.3, 0.3, 0.9).normalize() },
+      uLightAmount: { value: 0 },
     },
     shellEdges: {
       uColor: { value: color(palette.plasma300) },
@@ -213,6 +267,35 @@ function buildUniforms() {
 
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 const damp = THREE.MathUtils.damp;
+const lerp = THREE.MathUtils.lerp;
+const clamp = THREE.MathUtils.clamp;
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
+};
+
+/** Responsive composition: beside the copy on wide screens, above it on tall. */
+function layoutFor(placement: CorePlacement, viewport: RootState["viewport"]) {
+  if (placement === "center") {
+    return {
+      x: 0,
+      y: 0,
+      scale: Math.min(1, viewport.height / 6.4, viewport.width / 6.4),
+    };
+  }
+  if (viewport.width / viewport.height > 1.15) {
+    return {
+      x: viewport.width * 0.22,
+      y: 0.05,
+      scale: clamp(viewport.height / 7.2, 0.7, 1.1),
+    };
+  }
+  return {
+    x: 0,
+    y: viewport.height * 0.21,
+    scale: clamp(viewport.width / 6.6, 0.48, 0.8),
+  };
+}
 
 /* ---- Scene -------------------------------------------------------------- */
 
@@ -221,8 +304,9 @@ export function InterfaceCore({
   reducedMotion,
   placement,
   explode = 0,
+  progress,
+  callouts,
 }: InterfaceCoreProps) {
-  const viewport = useThree((state) => state.viewport);
   const invalidate = useThree((state) => state.invalidate);
 
   const geometries = useMemo(() => buildGeometries(), []);
@@ -237,8 +321,16 @@ export function InterfaceCore({
   const particles = useRef<THREE.Points>(null);
   const satellites = useRef<(THREE.Mesh | null)[]>([]);
   const materials = useRef<Record<string, THREE.ShaderMaterial | null>>({});
-  const clock = useRef({ t: 0, intro: 0, explode: 0 });
-  const pointer = useRef({ x: 0, y: 0 });
+  const clock = useRef({
+    t: 0,
+    intro: 0,
+    explode: 0,
+    placed: false,
+    fine: false,
+    lightX: 0.3,
+    lightY: 0.3,
+    labels: false,
+  });
 
   // Geometries passed as props are not owned by R3F — dispose them here.
   useEffect(
@@ -256,42 +348,23 @@ export function InterfaceCore({
   // Re-render the static pose when inputs change in on-demand mode.
   useEffect(() => invalidate(), [explode, placement, invalidate]);
 
-  // Pointer parallax: fine pointers only, never under reduced motion.
+  // Pointer-driven parallax and lighting: fine pointers, motion allowed.
   useEffect(() => {
-    if (reducedMotion || !window.matchMedia("(pointer: fine)").matches) return;
-    const onMove = (event: PointerEvent) => {
-      pointer.current.x = (event.clientX / window.innerWidth) * 2 - 1;
-      pointer.current.y = (event.clientY / window.innerHeight) * 2 - 1;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
+    trackPointer();
+    clock.current.fine =
+      !reducedMotion && window.matchMedia("(pointer: fine)").matches;
   }, [reducedMotion]);
-
-  // Responsive composition: beside the copy on wide screens, above it on
-  // tall ones.
-  const aspect = viewport.width / viewport.height;
-  const layout =
-    placement === "center"
-      ? {
-          x: 0,
-          y: 0,
-          scale: Math.min(1, viewport.height / 6.4, viewport.width / 6.4),
-        }
-      : aspect > 1.15
-        ? {
-            x: viewport.width * 0.22,
-            y: 0.05,
-            scale: THREE.MathUtils.clamp(viewport.height / 7.2, 0.7, 1.1),
-          }
-        : {
-            x: 0,
-            y: viewport.height * 0.21,
-            scale: THREE.MathUtils.clamp(viewport.width / 6.6, 0.48, 0.8),
-          };
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 1 / 20);
     const c = clock.current;
+    const hero = placement === "hero";
+
+    // Scroll choreography (hero only, never under reduced motion).
+    const scroll = hero && progress && !reducedMotion ? progress.get() : 0;
+    const travel = smoothstep(0.06, 0.55, scroll);
+    const burst = smoothstep(0.1, 0.55, scroll);
+
     if (reducedMotion) {
       c.t = STATIC_TIME;
       c.intro = 1;
@@ -299,7 +372,7 @@ export function InterfaceCore({
     } else {
       c.t += dt;
       c.intro = Math.min(1, c.intro + dt / INTRO_SECONDS);
-      c.explode = damp(c.explode, explode, 3.5, dt);
+      c.explode = damp(c.explode, Math.max(explode, burst), 4, dt);
     }
 
     const t = c.t;
@@ -307,18 +380,51 @@ export function InterfaceCore({
     const e = c.explode;
     const pixelRatio = state.gl.getPixelRatio();
     const m = materials.current;
+    const px = c.fine ? pointer.nx.get() : 0;
+    const py = c.fine ? pointer.ny.get() : 0;
 
-    // Parallax tilt toward the pointer + intro scale.
+    // Composition: glide from the layout position to centre on scroll.
+    const base = layoutFor(placement, state.viewport);
+    const goal = {
+      x: lerp(base.x, 0, travel),
+      y: lerp(base.y, 0, travel),
+      s: base.scale,
+    };
+    if (root.current) {
+      const r = root.current;
+      if (!c.placed || reducedMotion) {
+        r.position.set(goal.x, goal.y, 0);
+        r.scale.setScalar(goal.s);
+        c.placed = true;
+      } else {
+        r.position.x = damp(r.position.x, goal.x, 5, dt);
+        r.position.y = damp(r.position.y, goal.y, 5, dt);
+        r.scale.setScalar(damp(r.scale.x, goal.s, 5, dt));
+      }
+    }
+
+    // Camera: pointer parallax (depth separation) + dolly-in on scroll.
+    if (hero && !reducedMotion) {
+      const cam = state.camera;
+      // Parallax fades out as the labelled anatomy view appears, so text never jitters.
+      const parallax = 1 - travel;
+      cam.position.x = damp(cam.position.x, px * 0.45 * parallax, 2.2, dt);
+      cam.position.y = damp(cam.position.y, -py * 0.3 * parallax, 2.2, dt);
+      cam.position.z = damp(cam.position.z, CAMERA_Z - 0.8 * travel, 4, dt);
+      cam.lookAt(0, 0, 0);
+    }
+
+    // Tilt toward the pointer, turn as the hero scrolls, scale in on load.
     if (tilt.current) {
       tilt.current.rotation.x = damp(
         tilt.current.rotation.x,
-        pointer.current.y * 0.16,
+        py * 0.12 + travel * 0.22,
         2.5,
         dt,
       );
       tilt.current.rotation.y = damp(
         tilt.current.rotation.y,
-        pointer.current.x * 0.24,
+        px * 0.18 + travel * 0.9,
         2.5,
         dt,
       );
@@ -330,15 +436,15 @@ export function InterfaceCore({
     if (lattice.current) {
       lattice.current.rotation.y += spin * 0.12;
       lattice.current.rotation.x += spin * 0.035;
-      lattice.current.scale.setScalar(1 + e * 0.35);
+      lattice.current.scale.setScalar(1 + e * SEPARATION.lattice);
     }
     if (shell.current) {
       shell.current.rotation.y -= spin * 0.05;
-      shell.current.scale.setScalar(1 + e * 0.95);
+      shell.current.scale.setScalar(1 + e * SEPARATION.shell);
     }
     if (orbits.current) {
       orbits.current.rotation.y += spin * 0.02;
-      orbits.current.scale.setScalar(1 + e * 0.6);
+      orbits.current.scale.setScalar(1 + e * SEPARATION.orbits);
     }
 
     // Signal pulse from the nucleus.
@@ -349,7 +455,10 @@ export function InterfaceCore({
     if (m.glow)
       m.glow.uniforms.uIntensity!.value = (0.45 + energy * 0.35) * intro;
 
-    const latticeBoost = pulseBoost(t, layers.lattice * (1 + e * 0.35));
+    const latticeBoost = pulseBoost(
+      t,
+      layers.lattice * (1 + e * SEPARATION.lattice),
+    );
     if (m.lattice) {
       m.lattice.uniforms.uBoost!.value = latticeBoost;
       m.lattice.uniforms.uOpacity!.value = 0.55 * intro;
@@ -359,11 +468,19 @@ export function InterfaceCore({
       m.nodes.uniforms.uPixelRatio!.value = pixelRatio;
     }
 
-    const shellBoost = pulseBoost(t, layers.shell * (1 + e * 0.95));
+    // Shell: holographic surface + a light that follows the pointer.
+    c.lightX = damp(c.lightX, px * 0.9 + 0.15, 3, dt);
+    c.lightY = damp(c.lightY, -py * 0.7 + 0.25, 3, dt);
+    const shellBoost = pulseBoost(t, layers.shell * (1 + e * SEPARATION.shell));
     if (m.shell) {
-      m.shell.uniforms.uTime!.value = t;
-      m.shell.uniforms.uBoost!.value = shellBoost;
-      m.shell.uniforms.uOpacity!.value = intro;
+      const u = m.shell.uniforms;
+      u.uTime!.value = t;
+      u.uBoost!.value = shellBoost;
+      u.uOpacity!.value = intro;
+      (u.uLight!.value as THREE.Vector3)
+        .set(c.lightX, c.lightY, 0.75)
+        .normalize();
+      u.uLightAmount!.value = c.fine ? 1 : 0.35;
     }
     if (m.shellEdges) m.shellEdges.uniforms.uBoost!.value = shellBoost;
 
@@ -374,7 +491,7 @@ export function InterfaceCore({
         material.uniforms.uHead!.value = head;
         material.uniforms.uBoost!.value = pulseBoost(
           t,
-          ring.radius * (1 + e * 0.6),
+          ring.radius * (1 + e * SEPARATION.orbits),
         );
         material.uniforms.uOpacity!.value = ring.opacity * intro;
       }
@@ -393,10 +510,45 @@ export function InterfaceCore({
       const u = m.particles.uniforms;
       u.uTime!.value = t;
       u.uIntro!.value = intro;
-      u.uSpread!.value = 1 + e * 0.22;
+      u.uSpread!.value = 1 + e * SEPARATION.field;
       u.uPixelRatio!.value = pixelRatio;
       u.uPulseRadius!.value = pulse.radius;
       u.uPulseStrength!.value = pulse.strength * 0.8;
+    }
+
+    // Anatomy callouts: project each layer's anchor to screen space.
+    const labels = hero ? callouts?.current : undefined;
+    if (labels) {
+      const visible = e > 0.3;
+      if (visible && root.current) {
+        root.current.updateMatrixWorld();
+        const { width, height } = state.size;
+        projected
+          .setFromMatrixPosition(root.current.matrixWorld)
+          .project(state.camera);
+        const centreX = ((projected.x + 1) / 2) * width;
+        const rootMatrix = root.current.matrixWorld;
+        labels.forEach((el, i) => {
+          const anchor = anchors[i];
+          if (!el || !anchor) return;
+          projected
+            .copy(anchor.dir)
+            .multiplyScalar(anchor.radius * (1 + e * anchor.sep))
+            .applyMatrix4(rootMatrix)
+            .project(state.camera);
+          const x = ((projected.x + 1) / 2) * width;
+          const y = ((1 - projected.y) / 2) * height;
+          el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+          el.style.opacity = String(clamp((e - 0.35 - i * 0.07) / 0.22, 0, 1));
+          const side = x < centreX ? "left" : "right";
+          if (el.dataset.side !== side) el.dataset.side = side;
+        });
+      } else if (c.labels) {
+        labels.forEach((el) => {
+          if (el) el.style.opacity = "0";
+        });
+      }
+      c.labels = visible;
     }
   });
 
@@ -407,7 +559,7 @@ export function InterfaceCore({
   } as const;
 
   return (
-    <group ref={root} position={[layout.x, layout.y, 0]} scale={layout.scale}>
+    <group ref={root}>
       {/* Glow stays camera-facing: it lives outside the tilting group. */}
       <mesh renderOrder={-1}>
         <planeGeometry args={[4.4, 4.4]} />

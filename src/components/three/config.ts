@@ -68,3 +68,41 @@ export function pulseBoost(t: number, layerRadius: number) {
   const d = (radius - layerRadius) * 2.2;
   return Math.exp(-d * d) * strength;
 }
+
+/**
+ * Anatomy labels revealed as the core separates on scroll. Each layer maps
+ * to the part of the stack it stands for (résumé technologies only).
+ * Order matches the anchors in interface-core.tsx.
+ */
+export const CALLOUTS = [
+  {
+    layer: "Nucleus",
+    index: "01",
+    meaning: "State & logic",
+    stack: "Redux · Pinia",
+  },
+  {
+    layer: "Lattice",
+    index: "02",
+    meaning: "Structure",
+    stack: "React · Vue · Next.js",
+  },
+  {
+    layer: "Shell",
+    index: "03",
+    meaning: "Interface",
+    stack: "Tailwind · Vuetify · MUI",
+  },
+  {
+    layer: "Orbits",
+    index: "04",
+    meaning: "Interaction",
+    stack: "Socket.io · React Hook Form",
+  },
+  {
+    layer: "Field",
+    index: "05",
+    meaning: "Data",
+    stack: "REST · Node.js · MongoDB",
+  },
+] as const;

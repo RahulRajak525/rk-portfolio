@@ -5,6 +5,9 @@ import { getSiteUrl } from "@/lib/site-url";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { Atmosphere } from "@/components/layout/atmosphere";
 import { PointerSpotlight } from "@/components/layout/pointer-spotlight";
+import { SectionObserver } from "@/components/layout/section-observer";
+import { SmoothScroll } from "@/components/motion/smooth-scroll";
+import { Cursor } from "@/components/cursor/cursor";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SkipLink } from "@/components/layout/skip-link";
@@ -86,8 +89,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <SiteFooter />
+          <Cursor />
         </MotionProvider>
         <PointerSpotlight />
+        <SmoothScroll />
+        <SectionObserver />
       </body>
     </html>
   );

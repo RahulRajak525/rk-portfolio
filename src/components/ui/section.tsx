@@ -1,6 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Reveal } from "@/components/motion/reveal";
+import { ScrambleText } from "@/components/motion/scramble-text";
+import { SplitReveal } from "@/components/motion/split-reveal";
 import { Container } from "./container";
 import { Eyebrow, Heading, Text } from "./typography";
 
@@ -38,12 +40,15 @@ type SectionHeaderProps = {
   id: string;
   index: string;
   eyebrow: string;
-  title: ReactNode;
+  title: string;
   description?: ReactNode;
   className?: string;
 };
 
-/** Index + eyebrow + display title, with an optional lede aligned right. */
+/**
+ * Index + eyebrow + display title, with an optional lede aligned right.
+ * The section's entrance: the eyebrow decodes, the title rises word by word.
+ */
 export function SectionHeader({
   id,
   index,
@@ -59,12 +64,14 @@ export function SectionHeader({
         className,
       )}
     >
-      <Reveal className="lg:col-span-7">
-        <Eyebrow index={index}>{eyebrow}</Eyebrow>
+      <div className="lg:col-span-7">
+        <Eyebrow index={index}>
+          <ScrambleText text={eyebrow} />
+        </Eyebrow>
         <Heading as="h2" id={`${id}-title`} size="display-lg" className="mt-5">
-          {title}
+          <SplitReveal text={title} />
         </Heading>
-      </Reveal>
+      </div>
       {description ? (
         <Reveal delay={0.1} className="lg:col-span-5 lg:justify-self-end">
           <Text size="lg" className="max-w-md">

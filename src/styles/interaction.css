@@ -1,0 +1,279 @@
+/* ==========================================================================
+   INTERACTION — the STEP 3 layer: smooth scrolling, cursor, magnetic
+   controls, scroll-driven reveals and ambient section states.
+   Principle: CSS first (compositor-friendly, zero JS); JS only where the
+   effect needs pointer data or physics.
+   ========================================================================== */
+
+/* ---- Lenis (from lenis/dist/lenis.css) ---------------------------------- */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+.lenis.lenis-autoToggle {
+  transition-property: overflow;
+  transition-duration: 1ms;
+  transition-behavior: allow-discrete;
+}
+
+/* Lenis owns the easing; native smooth scrolling would fight it. */
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* ---- Custom cursor ------------------------------------------------------ */
+html.cursor-custom,
+html.cursor-custom * {
+  cursor: none !important;
+}
+
+@layer components {
+  .cursor-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    translate: -50% -50%;
+    border: 1px solid oklch(0.92 0.02 266 / 0.4);
+    transition:
+      opacity var(--dur-base) var(--ease-out-quart),
+      background-color var(--dur-base) var(--ease-out-quart),
+      border-color var(--dur-base) var(--ease-out-quart),
+      scale var(--dur-fast) var(--ease-out-quart);
+    will-change: transform;
+  }
+
+  .cursor-ring[data-variant="hidden"],
+  .cursor-ring[data-variant="minimal"] {
+    opacity: 0;
+  }
+
+  .cursor-ring[data-variant="link"] {
+    border-color: var(--color-accent);
+    background-color: oklch(0.81 0.14 206 / 0.08);
+  }
+
+  .cursor-ring[data-variant="morph"] {
+    border-color: oklch(0.87 0.12 202 / 0.55);
+    background-color: oklch(0.81 0.14 206 / 0.05);
+  }
+
+  .cursor-ring[data-variant="label"] {
+    border-color: transparent;
+    background-color: var(--color-accent);
+    box-shadow: 0 0 30px -4px oklch(0.81 0.14 206 / 0.6);
+  }
+
+  .cursor-ring[data-pressed="true"] {
+    scale: 0.86;
+  }
+
+  .cursor-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-micro);
+    letter-spacing: var(--text-micro--letter-spacing);
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-on-accent);
+    opacity: 0;
+    transition: opacity var(--dur-fast);
+  }
+
+  .cursor-ring[data-variant="label"] .cursor-label {
+    opacity: 1;
+  }
+
+  .cursor-dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    translate: -50% -50%;
+    border-radius: 9999px;
+    background-color: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-ion-400);
+    transition:
+      opacity var(--dur-fast),
+      scale var(--dur-base) var(--ease-out-expo);
+    will-change: transform;
+  }
+
+  .cursor-dot[data-variant="hidden"] {
+    opacity: 0;
+  }
+
+  .cursor-dot[data-variant="morph"],
+  .cursor-dot[data-variant="label"],
+  .cursor-dot[data-variant="link"] {
+    scale: 0;
+  }
+
+  /* Magnetic controls: offset written by the cursor; smoothed by the
+     element's own transform transition. */
+  [data-magnetic] {
+    transform: translate3d(var(--magnet-x, 0px), var(--magnet-y, 0px), 0);
+  }
+}
+
+/* ---- Hero headline: the display face expands into its wide cut --------- */
+@keyframes enter-stretch {
+  from {
+    font-stretch: 100%;
+  }
+}
+
+[data-enter="rise-stretch"] {
+  animation:
+    enter-rise 1.15s var(--ease-out-expo) both,
+    enter-stretch 1.7s var(--ease-in-out-quart) both;
+  animation-delay:
+    var(--enter-delay, 0ms), calc(var(--enter-delay, 0ms) + 220ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-enter="rise-stretch"] {
+    animation: none;
+  }
+}
+
+/* ---- Scroll-driven (CSS) reveals: progressive enhancement ---------------
+   Where scroll timelines are unsupported, elements simply render final. */
+.emph {
+  color: var(--color-fg);
+  background: linear-gradient(var(--color-accent), var(--color-accent))
+    no-repeat 0 100% / 100% 1px;
+  padding-bottom: 1px;
+}
+
+@keyframes emph-draw {
+  from {
+    background-size: 0% 1px;
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    scale: 0 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .emph {
+      animation: emph-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 60% cover 42%;
+    }
+
+    .rule-draw {
+      transform-origin: left center;
+      animation: rule-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+}
+
+/* ---- Ambient section states: the atmosphere re-lights per section ------ */
+@layer components {
+  .atmosphere__shift {
+    position: absolute;
+    inset: 0;
+    transition:
+      transform 2.6s var(--ease-in-out-quart),
+      opacity 2.6s var(--ease-in-out-quart);
+    will-change: transform;
+  }
+
+  html[data-section="experience"] .atmosphere__shift--ion {
+    transform: translate3d(-40vw, 10vh, 0) scale(0.85);
+  }
+  html[data-section="experience"] .atmosphere__shift--plasma {
+    transform: translate3d(35vw, -12vh, 0);
+    opacity: 0.75;
+  }
+
+  html[data-section="projects"] .atmosphere__shift--ion {
+    transform: translate3d(-18vw, 34vh, 0) scale(1.1);
+  }
+  html[data-section="projects"] .atmosphere__shift--plasma {
+    transform: translate3d(52vw, -46vh, 0);
+  }
+
+  html[data-section="capabilities"] .atmosphere__shift--ion {
+    transform: translate3d(-58vw, 30vh, 0);
+  }
+  html[data-section="capabilities"] .atmosphere__shift--plasma {
+    transform: translate3d(22vw, -34vh, 0) scale(1.15);
+  }
+
+  html[data-section="about"] .atmosphere__shift--ion {
+    transform: translate3d(-8vw, 52vh, 0);
+    opacity: 0.6;
+  }
+  html[data-section="about"] .atmosphere__shift--plasma {
+    transform: translate3d(42vw, 0, 0);
+    opacity: 0.6;
+  }
+
+  html[data-section="contact"] .atmosphere__shift--ion {
+    transform: translate3d(-30vw, 62vh, 0) scale(1.2);
+  }
+  html[data-section="contact"] .atmosphere__shift--plasma {
+    transform: translate3d(60vw, -52vh, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .atmosphere__shift {
+      transition: none;
+    }
+  }
+}
+
+/* ---- Scroll-scrubbed motion under reduced motion ------------------------
+   Components bind transforms/opacity to scroll unconditionally (identical
+   server and client markup); this rule neutralises them for users who ask
+   for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-linked] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ---- Schematic data-flow (projects) -------------------------------------
+   Dashes march only while the schematic is the focus: hovered (pointer),
+   on the sticky stage, or on screen (touch). Never under reduced motion. */
+.flow-path {
+  stroke-dasharray: 4 4;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-flow="always"] .flow-path,
+  [data-inview="true"] [data-flow="inview"] .flow-path {
+    animation: dash-flow 1.4s linear infinite;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-flow-host]:hover [data-flow="hover"] .flow-path {
+      animation: dash-flow 1.4s linear infinite;
+    }
+  }
+}

@@ -17,24 +17,33 @@ export const timeline: readonly TimelineEntry[] = [
       {
         text: "Leading a module-by-module Vue 3 → React migration in production, with React shipped as a Git submodule so legacy and migrated modules run side by side.",
         projectId: "migration",
+        emphasis: ["Vue 3 → React migration in production", "Git submodule"],
       },
       {
         text: "Engineered a map-based stakeholder-communication module that sends physical letters to recipients selected from groups or interactive map regions.",
         projectId: "stakeholder-communication",
+        emphasis: [
+          "map-based stakeholder-communication module",
+          "physical letters",
+        ],
       },
       {
         text: "Specified and built Updates V2, a drag-and-drop block editor (40 tickets across 10 epics from Figma analysis), plus a React Kanban board.",
         projectId: "stakeholder-communication",
+        emphasis: ["Updates V2", "40 tickets across 10 epics"],
       },
       {
         text: "Built an internal Claude Code agent that regenerates the Expo / React Native app whenever the React web codebase changes.",
         projectId: "native-sync",
+        emphasis: ["internal Claude Code agent"],
       },
       {
         text: "Integrated LaunchDarkly, Sentry and Product Fruits; delivered through GitLab merge requests and CI/CD to GKE, tracked in Shortcut.",
+        emphasis: ["CI/CD to GKE"],
       },
       {
         text: "Previously built React and Redux financial dashboards for a Credit Management System serving Dutch enterprise clients.",
+        emphasis: ["financial dashboards"],
       },
     ],
     stack: [
