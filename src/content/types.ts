@@ -73,7 +73,7 @@ export interface TimelineEntry {
 /* ---- Projects ---------------------------------------------------------- */
 
 export type CaseVisualKind =
-  "migration" | "agent" | "communication" | "commerce";
+  "communication" | "commerce" | "messenger" | "curtains";
 
 export interface CaseStudy {
   id: string;
@@ -96,7 +96,8 @@ export interface CaseStudy {
 
 /* ---- Capabilities ------------------------------------------------------ */
 
-export type EvidenceId = "treeroot" | "kora" | "sharpener" | "portfolio";
+export type EvidenceId =
+  "treeroot" | "kora" | "lowkey" | "curtaksh" | "sharpener" | "portfolio";
 
 export interface Skill {
   name: string;

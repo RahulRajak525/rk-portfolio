@@ -2,7 +2,7 @@
 export const story = [
   "I came to software from mechanical engineering. After a B.Tech at ABES Engineering College, I moved into frontend development through project-based training at Sharpener.tech, building with React, Redux and React Router.",
   "Since June 2023 I've worked remotely at Treeroot Informatics as the sole frontend developer on an enterprise civic-communication SaaS platform for Dutch municipalities — building its product modules, leading its Vue 3 → React migration in production, and shipping through GitLab CI/CD to GKE.",
-  "AI is part of how I engineer: I built an internal Claude Code agent that keeps the Expo / React Native app in sync with the React web codebase. Outside work, I built Kora, a full-stack MERN commerce platform, end to end.",
+  "AI is part of how I engineer: I built an internal Claude Code agent that keeps the Expo / React Native app in sync with the React web codebase. Outside work, I built Kora, a full-stack MERN commerce platform, end to end, and designed and built Curtaksh, a premium curtains storefront that re-lights from dawn to night.",
 ] as const;
 
 export const strengths = [

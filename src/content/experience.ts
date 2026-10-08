@@ -16,7 +16,7 @@ export const timeline: readonly TimelineEntry[] = [
     highlights: [
       {
         text: "Leading a module-by-module Vue 3 → React migration in production, with React shipped as a Git submodule so legacy and migrated modules run side by side.",
-        projectId: "migration",
+        projectId: "stakeholder-communication",
         emphasis: ["Vue 3 → React migration in production", "Git submodule"],
       },
       {
@@ -34,7 +34,6 @@ export const timeline: readonly TimelineEntry[] = [
       },
       {
         text: "Built an internal Claude Code agent that regenerates the Expo / React Native app whenever the React web codebase changes.",
-        projectId: "native-sync",
         emphasis: ["internal Claude Code agent"],
       },
       {
